@@ -1,0 +1,116 @@
+ext {
+
+    android = [
+            compileSdkVersion: 28,
+            buildToolsVersion: '28.0.3',
+            applicationId    : 'com.royole.dataclone',
+            minSdkVersion    : 21,
+            targetSdkVersion : 28,
+            versionCode      : 30,
+            versionName      : '1.2.0',
+    ]
+
+    version = [
+            junitVersion        : '4.12',
+            runnerVersion       : '1.1.0',
+            espressoVersion     : '3.1.0',
+            robolectricVersion  : '4.1',
+            butterknifeVersion  : '10.1.0',
+            multidexVersion     : '2.0.0',
+            leakcanaryVersion   : '2.0-beta-2',
+            stethoVersion       : '1.5.1',
+            dagger2Version      : '2.23.2',
+            rxlifecycleVersion  : '3.0.0',
+            rxAndroidVersion    : '2.1.1',
+            rxJavaVersion       : '2.2.10',
+            retrofitVersion     : '2.6.0',
+            okhttpVersion       : '4.0.0',
+            gsonVersion         : '2.8.5',
+            glideVersion        : '4.9.0',
+            tinypinyinVersion   : '2.0.3',
+            zxingVersion        : '1.3.6',
+            fragmentationVersion: '1.3.7',
+            andPermissionVersion: '2.0.1',
+            protobufLiteVersion : '3.0.1',
+            commonUtilVersion   : '1.0.0',
+            commonLogVersion    : '1.0.2',
+            okdownloadVersion   : '1.0.5',
+    ]
+
+    dependencies = [
+            // support
+            "appcompat"                  : 'androidx.appcompat:appcompat:1.0.2',
+            "design"                     : 'com.google.android.material:material:1.0.0',
+            "annotations"                : 'androidx.annotation:annotation:1.0.0',
+            "constraint_layout"          : 'androidx.constraintlayout:constraintlayout:1.1.3',
+
+            // test
+            "junit"                      : "junit:junit:${version["junitVersion"]}",
+            "AndroidJUnitRunner"         : 'androidx.test.runner.AndroidJUnitRunner',
+            "runner"                     : "androidx.test:runner:${version["runnerVersion"]}",
+            "espresso_core"              : "androidx.test.espresso:espresso-core:${version["espressoVersion"]}",
+            "robolectric"                : "org.robolectric:robolectric:${version["robolectricVersion"]}",
+
+            // butterknife
+            "butterknife"                : "com.jakewharton:butterknife:${version["butterknifeVersion"]}",
+            "butterknife_compiler"       : "com.jakewharton:butterknife-compiler:${version["butterknifeVersion"]}",
+
+            // multidex
+            "multidex"                   : "androidx.multidex:multidex:${version["multidexVersion"]}",
+
+            // debug
+            "leakcanary"                 : "com.squareup.leakcanary:leakcanary-android:${version["leakcanaryVersion"]}",
+            "stetho"                     : "com.facebook.stetho:stetho:${version["stethoVersion"]}",
+            "stetho_okhttp"              : "com.facebook.stetho:stetho-okhttp3:${version["stethoVersion"]}",
+
+            // dagger2
+            "dagger2"                    : "com.google.dagger:dagger:${version["dagger2Version"]}",
+            "dagger2_compiler"           : "com.google.dagger:dagger-compiler:${version["dagger2Version"]}",
+
+            // rx
+            "rxandroid2"                 : "io.reactivex.rxjava2:rxandroid:${version["rxAndroidVersion"]}",
+            "rxjava2"                    : "io.reactivex.rxjava2:rxjava:${version["rxJavaVersion"]}",
+            "rxlifecycle3"               : "com.trello.rxlifecycle3:rxlifecycle:${version["rxlifecycleVersion"]}",
+            "rxlifecycle3_android"       : "com.trello.rxlifecycle3:rxlifecycle-android:${version["rxlifecycleVersion"]}",
+            "rxlifecycle3_components"    : "com.trello.rxlifecycle3:rxlifecycle-components:${version["rxlifecycleVersion"]}",
+
+            // network
+            "retrofit2"                  : "com.squareup.retrofit2:retrofit:${version["retrofitVersion"]}",
+            "retrofit2_converter_gson"   : "com.squareup.retrofit2:converter-gson:${version["retrofitVersion"]}",
+            "retrofit2_adapter_rxjava2"  : "com.squareup.retrofit2:adapter-rxjava2:${version["retrofitVersion"]}",
+            "okhttp3"                    : "com.squareup.okhttp3:okhttp:${version["okhttpVersion"]}",
+            "okhttp3_logging_interceptor": "com.squareup.okhttp3:logging-interceptor:${version["okhttpVersion"]}",
+            "gson"                       : "com.google.code.gson:gson:${version["gsonVersion"]}",
+
+            // glide
+            "glide"                      : "com.github.bumptech.glide:glide:${version["glideVersion"]}",
+            "glide_compiler"             : "com.github.bumptech.glide:compiler:${version["glideVersion"]}",
+
+            // 汉子转拼音
+            "tinypinyin"                 : "com.github.promeg:tinypinyin:${version["tinypinyinVersion"]}",
+
+            // 二维码
+            "zxing"                      : "cn.bingoogolapple:bga-qrcode-zxing:${version["zxingVersion"]}",
+
+            // Fragment框架
+            "fragmentation"              : "me.yokeyword:fragmentation:${version["fragmentationVersion"]}",
+
+            // permission
+            "andPermission"             : "com.yanzhenjie.permission:x:${version["andPermissionVersion"]}",
+
+            // protobuf
+            "protobuf_lite"              : "com.google.protobuf:protobuf-lite:${version["protobufLiteVersion"]}",
+
+            // commonUtil
+            "common_util"                : "com.royole.app:common-util-android:${version["commonUtilVersion"]}",
+
+            // commonLog
+            "common_log"                 : "com.royole.app:commonlog:${version["commonLogVersion"]}",
+
+            // okDownload
+            "okdownload_okhttp"          : "com.liulishuo.okdownload:okhttp:${version["okdownloadVersion"]}",
+            "okdownload_okdownload"      : "com.liulishuo.okdownload:okdownload:${version["okdownloadVersion"]}",
+            "okdownload_sqlite"          : "com.liulishuo.okdownload:sqlite:${version["okdownloadVersion"]}",
+    ]
+
+}

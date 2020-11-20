@@ -1,7 +1,11 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-android-extensions'
 }
+
+def config = rootProject.ext.android
+def libraries = rootProject.ext.dependencies
 
 android {
     compileSdkVersion 29
@@ -41,4 +45,25 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'org.nanohttpd:nanohttpd-webserver:2.3.1'
+
+    /* rx */
+    implementation libraries.rxandroid2
+    implementation libraries.rxjava2
+    implementation libraries.rxlifecycle3
+//    implementation libraries.rxlifecycle3_android
+    implementation libraries.rxlifecycle3_components
+
+    /* network */
+    implementation libraries.retrofit2
+    implementation libraries.retrofit2_converter_gson
+    implementation libraries.retrofit2_adapter_rxjava2
+    implementation libraries.okhttp3
+    implementation libraries.okhttp3_logging_interceptor
+    implementation libraries.gson
+
+    /* glide */
+    implementation libraries.glide
+    annotationProcessor libraries.glide_compiler
 }
