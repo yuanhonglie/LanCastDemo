@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-android-extensions'
+    id 'kotlin-kapt'
 }
 
 def config = rootProject.ext.android
@@ -65,5 +66,7 @@ dependencies {
 
     /* glide */
     implementation libraries.glide
-    annotationProcessor libraries.glide_compiler
+    kapt libraries.glide_compiler
+
+    implementation libraries.andPermission
 }
