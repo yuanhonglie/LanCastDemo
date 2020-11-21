@@ -2,23 +2,42 @@ package com.yhl.server
 
 import android.app.Service
 import android.content.Intent
+import android.os.Handler
 import android.os.IBinder
+import android.os.Message
+import android.os.Messenger
 import android.util.Log
 import fi.iki.elonen.NanoHTTPD
 
 val TAG = HttpService::class.simpleName
-
+const val MSG_ACTIVITY_REGISTER = 0
 class HttpService: Service() {
-    var mHttpServer: NanoHTTPD? = null
+    var mHttpServer: HttpServer? = null
     var mFileServer: NanoHTTPD? = null
 
-    override fun onBind(intent: Intent?): IBinder? = null
+    val handler = object : Handler() {
+        override fun handleMessage(msg: Message) {
+            when(msg.what) {
+                MSG_ACTIVITY_REGISTER -> {
+                    mClientMessenger = msg.replyTo
+                    mHttpServer?.uiMessenger = mClientMessenger
+                }
+            }
+        }
+    }
+    var mClientMessenger: Messenger? = null
+    var mServerMessenger: Messenger = Messenger(handler)
+
+    override fun onBind(intent: Intent?): IBinder? {
+        startServer()
+        return mServerMessenger.binder
+    }
 
     private fun startServer() {
         Log.i(TAG, "startServer: ")
         if (mHttpServer == null) {
             mHttpServer = HttpServer()
-            mHttpServer!!.start()
+            mHttpServer!!.start(30*1000)
         }
 
         if (mFileServer == null) {
@@ -39,7 +58,6 @@ class HttpService: Service() {
         startServer()
         return START_STICKY
     }
-
 
     override fun onDestroy() {
         super.onDestroy()

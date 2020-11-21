@@ -2,16 +2,18 @@ package com.yhl.cast
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Message
 import android.util.Log
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
+import com.yhl.data.Media
+import com.yhl.data.MediaType
+import com.yhl.data.TaskInfo
 import com.yhl.http.HttpClient
-import com.yhl.server.FILE_SERVER_PORT
 import com.yhl.server.HttpService
-import com.yhl.server.MESSAGE_SERVER_PORT
+import com.yhl.util.getIPv4Address
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -20,19 +22,17 @@ import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.Request
 
 
-class MainActivity : AppCompatActivity() {
-    private val TAG = MainActivity::class.simpleName
+class ClientActivity : BaseActivity() {
+    private val TAG = ClientActivity::class.simpleName
 
-    val host: String = "127.0.0.1"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //host = getIPv4Address()
-        tvIp.text = host
+        tvIp.text = getIPv4Address()
 
         btnStart.setOnClickListener {
-            startService(Intent(this, HttpService::class.java))
+
         }
 
         btnRequestMessage.setOnClickListener {
@@ -46,9 +46,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnRequestVideo.setOnClickListener{
+            stopVideo()
             vvVideo.visibility = View.VISIBLE
             ivImage.visibility = View.GONE
             vvVideo.setVideoPath(getVideoUrl())
+            vvVideo.setOnCompletionListener { vvVideo.start() }
             vvVideo.start()
         }
 
@@ -58,6 +60,36 @@ class MainActivity : AppCompatActivity() {
                 .onGranted { Log.i(TAG, "RequestStorage: onGranted") }
                 .onDenied{ Log.i(TAG, "RequestStorage: onDenied")}
                 .start()
+    }
+
+    override fun getBaseUrl() = getMessageServerUrl()
+
+    override fun getHost() = "192.168.12.110"
+
+    override fun finish() {
+        super.finish()
+        stopVideo()
+    }
+
+    private fun stopVideo() {
+        if (vvVideo.isPlaying) {
+            vvVideo.stopPlayback()
+        }
+    }
+
+    private fun playMedia(media: Media) {
+        if (media.mediaType == MediaType.video) {
+            stopVideo()
+            vvVideo.visibility = View.VISIBLE
+            ivImage.visibility = View.GONE
+            vvVideo.setVideoPath(getVideoUrl())
+            //vvVideo.setOnCompletionListener { vvVideo.start() }
+            vvVideo.start()
+        } else {
+            ivImage.visibility = View.VISIBLE
+            vvVideo.visibility = View.GONE
+            Glide.with(this).load(getImageUrl()).into(ivImage)
+        }
     }
 
     private fun requestMessageServer() {
@@ -78,13 +110,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun createHttpRequest() = Request.Builder().url(getMessageServerUrl()).build()
 
-    private fun getMessageServerUrl() = "http://$host:${MESSAGE_SERVER_PORT}"
+    override fun onMessage(msg: Message) {
+        super.onMessage(msg)
+        when(msg.what) {
+            100 -> {
+                val taskInfo = msg.obj
+                if (taskInfo is TaskInfo) {
+                    val media = taskInfo.media
+                    playMedia(media)
+                }
+            }
+        }
+    }
 
-    private fun getFileServerUrl() = "http://$host:${FILE_SERVER_PORT}"
-
-    private fun getImageUrl() = "${getFileServerUrl()}/sdcard/download/sky.jpg"
-    private fun getVideoUrl() = "${getFileServerUrl()}/sdcard/download/sky.jpg"
-
-    private fun getRemoteImageUrl() = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1605889829717&di=60255c3716346be17816b81ae1c64a02&imgtype=0&src=http%3A%2F%2Fimg1.gtimg.com%2Fhn%2Fpics%2Fhv1%2F51%2F217%2F2144%2F139468986.jpg"
-    private fun getRemoteVideoUrl() = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1605889829717&di=60255c3716346be17816b81ae1c64a02&imgtype=0&src=http%3A%2F%2Fimg1.gtimg.com%2Fhn%2Fpics%2Fhv1%2F51%2F217%2F2144%2F139468986.jpg"
 }
