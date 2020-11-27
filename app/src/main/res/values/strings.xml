@@ -1,5 +1,0 @@
-<resources>
-    <string name="app_name">LanCastDemo</string>
-    <string name="app_name_server">CastServer</string>
-    <string name="app_name_client">CastClient</string>
-</resources>

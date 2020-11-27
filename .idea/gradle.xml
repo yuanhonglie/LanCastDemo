@@ -10,7 +10,10 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/jmdns" />
+            <option value="$PROJECT_DIR$/lanlink" />
+            <option value="$PROJECT_DIR$/receiver" />
+            <option value="$PROJECT_DIR$/sender" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

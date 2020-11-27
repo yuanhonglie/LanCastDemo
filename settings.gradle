@@ -1,2 +1,5 @@
-include ':app'
-rootProject.name = "LanCastDemo"
+include ':jmdns'
+include ':sender'
+include ':lanlink'
+include ':receiver'
+rootProject.name = "LanLinkDemo"
