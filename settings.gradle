@@ -1,4 +1,3 @@
-include ':jmdns'
 include ':sender'
 include ':lanlink'
 include ':receiver'

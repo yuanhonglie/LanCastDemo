@@ -1,5 +1,7 @@
 package com.yhl.lanlink.data
 
+import java.net.InetAddress
+
 data class Media(var uri: String, var mediaType: MediaType, var name: String = "") {
     var mimeType: String = ""
     var md5: String = ""
@@ -34,3 +36,5 @@ enum class ActionType {
 enum class PlayMode {
     default, loop
 }
+
+data class ServiceInfo(val name: String, val host: InetAddress, val port: Int)
