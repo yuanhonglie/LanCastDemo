@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.GsonBuilder
 import com.yhl.lanlink.FILE_SERVER_PORT
 import com.yhl.lanlink.MESSAGE_SERVER_PORT
-import com.yhl.lanlink.MSG_ACTIVITY_REGISTER
+import com.yhl.lanlink.MSG_UI_ACTIVITY_REGISTER
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.Media
 import com.yhl.lanlink.data.MediaType
@@ -95,8 +95,8 @@ abstract class BaseActivity: AppCompatActivity() {
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             serviceMessenger = Messenger(service)
-            sendMessage(MSG_ACTIVITY_REGISTER)
-            handler.sendEmptyMessage(MSG_ACTIVITY_REGISTER)
+            sendMessage(MSG_UI_ACTIVITY_REGISTER)
+            handler.sendEmptyMessage(MSG_UI_ACTIVITY_REGISTER)
             onConnected()
         }
 
@@ -114,14 +114,13 @@ abstract class BaseActivity: AppCompatActivity() {
     open fun sendMessage(command: Int, bundle: Bundle?) {
         val message = Message.obtain()
         message.what = command
-        if (command == MSG_ACTIVITY_REGISTER) {
+        if (command == MSG_UI_ACTIVITY_REGISTER) {
             message.replyTo = clientMessenger
         }
         if (bundle != null) message.data = bundle
         try {
             serviceMessenger?.send(message)
         } catch (e: RemoteException) {
-            e.printStackTrace()
             println("sendMessage: error = ${e.message}")
         }
     }
@@ -131,30 +130,6 @@ abstract class BaseActivity: AppCompatActivity() {
 
 
     abstract fun getBaseUrl(): String
-
-    protected open fun getConverterFactory(): Converter.Factory? {
-        val gson = GsonBuilder().setLenient().create()
-        return GsonConverterFactory.create(gson)
-    }
-
-    @Synchronized
-    protected fun getServiceApi(service: Class<MediaServerApi>): MediaServerApi? {
-        if (serviceCache.containsKey(service)) {
-            return serviceCache.get(service) as MediaServerApi
-        }
-        val retrofit = Retrofit.Builder()
-            .baseUrl(getBaseUrl())
-            .client(HttpClient.client)
-            .addConverterFactory(getConverterFactory())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .build()
-        val api = retrofit.create<MediaServerApi>(service)
-
-        serviceCache[service] = api
-        return api
-    }
-
-
 
     abstract fun getClientHost(): String
 
@@ -169,16 +144,4 @@ abstract class BaseActivity: AppCompatActivity() {
 
     protected fun getNetImageUrl() = "http://news.cri.cn/gb/mmsource/images/2013/06/23/2/2211679758122940818.jpg"
     protected fun getNetVideoUrl() = "http://v.mifile.cn/b2c-mimall-media/ed921294fb62caf889d40502f5b38147.mp4"
-
-    protected fun sendCastTask(uri: String, type: MediaType) {
-        val media = Media(uri,type)
-        val taskInfo = TaskInfo(media, ActionType.cast)
-
-        getServiceApi(MediaServerApi::class.java)?.let {
-            it.requestTransfer(taskInfo)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { println(it) }
-        }
-    }
 }

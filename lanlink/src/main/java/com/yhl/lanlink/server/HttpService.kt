@@ -7,20 +7,21 @@ import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import android.util.Log
-import com.yhl.lanlink.MSG_ACTIVITY_REGISTER
+import com.yhl.lanlink.MSG_UI_ACTIVITY_REGISTER
 import fi.iki.elonen.NanoHTTPD
 
 val TAG = HttpService::class.simpleName
 class HttpService: Service() {
-    var mHttpServer: HttpServer? = null
-    var mFileServer: NanoHTTPD? = null
+    private var mHttpServer: HttpServer? = null
+    private var mFileServer: NanoHTTPD? = null
+    private val mConnectionManager = ConnectionManager()
 
-    val handler = object : Handler() {
+    private val handler = object : Handler() {
         override fun handleMessage(msg: Message) {
             when(msg.what) {
-                MSG_ACTIVITY_REGISTER -> {
+                MSG_UI_ACTIVITY_REGISTER -> {
                     mClientMessenger = msg.replyTo
-                    mHttpServer?.uiMessenger = mClientMessenger
+                    mConnectionManager?.mUiMessenger = mClientMessenger
                 }
             }
         }
@@ -34,9 +35,9 @@ class HttpService: Service() {
     }
 
     private fun startServer() {
-        Log.i(TAG, "startServer: ")
+        Log.i(TAG, "startServer: 0")
         if (mHttpServer == null) {
-            mHttpServer = HttpServer()
+            mHttpServer = HttpServer(mConnectionManager)
             mHttpServer!!.start(30*1000)
         }
 
@@ -44,6 +45,7 @@ class HttpService: Service() {
             mFileServer = FileServer()
             mFileServer!!.start()
         }
+        Log.i(TAG, "startServer: 1")
     }
 
     private fun stopServer() {
@@ -61,6 +63,7 @@ class HttpService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        mConnectionManager.destroy()
         stopServer()
     }
 }

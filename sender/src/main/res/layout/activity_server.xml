@@ -32,8 +32,6 @@
         android:id="@+id/etImagePath"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:layout_marginLeft="5dp"
         android:layout_marginTop="6dp"
         android:layout_marginEnd="5dp"
         android:layout_marginRight="5dp"
@@ -42,7 +40,7 @@
         app:layout_constraintEnd_toStartOf="@+id/btnSendImage"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDevice" />
+        app:layout_constraintTop_toBottomOf="@+id/btnConnect" />
 
     <EditText
         android:id="@+id/etVideoPath"
@@ -81,6 +79,30 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/btnDiscover" />
 
+    <Button
+        android:id="@+id/btnConnect"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:text="connect"
+        app:layout_constraintEnd_toStartOf="@+id/btnDisconnect"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvDevice" />
+
+    <Button
+        android:id="@+id/btnDisconnect"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:text="disconnect"
+        app:layout_constraintBottom_toBottomOf="@+id/btnConnect"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnConnect"
+        app:layout_constraintVertical_bias="0.0" />
+
     <TextView
         android:id="@+id/tvDevice"
         android:layout_width="0dp"
@@ -92,6 +114,7 @@
         android:layout_marginRight="5dp"
         android:text="no receiver"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnDiscover" />
 

@@ -56,7 +56,7 @@ dependencies {
     implementation libraries.rxlifecycle3_components
 
     /* network */
-    implementation libraries.retrofit2
+    api libraries.retrofit2
     implementation libraries.retrofit2_converter_gson
     implementation libraries.retrofit2_adapter_rxjava2
     implementation libraries.okhttp3

@@ -32,8 +32,12 @@ class ClientActivity : BaseActivity(), RegistrationListener {
 
         tvIp.text = getIPv4Address()
 
-        btnStart.setOnClickListener {
+        publish.setOnClickListener {
             startServiceBroadcast()
+        }
+
+        unpublish.setOnClickListener {
+            stopServiceBroadcast()
         }
 
         btnRequestMessage.setOnClickListener {

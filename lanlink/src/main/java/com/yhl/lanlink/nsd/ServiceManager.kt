@@ -7,44 +7,72 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
-import android.util.Log
-import com.yhl.lanlink.LINK_SERVICE_TYPE
-import com.yhl.lanlink.MESSAGE_SERVER_PORT
+import com.yhl.lanlink.*
+import com.yhl.lanlink.channel.Channel
+import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.ServiceInfo
-import com.yhl.lanlink.util.getIPv4Address
-import java.net.InetAddress
 
 class ServiceManager {
     private val TAG = ServiceManager::class.simpleName
     private lateinit var mNsdManager: NsdManager
     private var mWorkerThread: HandlerThread
-    private var mWorkerHandler: WorkerHandler? = null
-    private var mUiHandler = MainHandler(Looper.getMainLooper())
+    private lateinit var mWorkerHandler: WorkerHandler
+    private val mUiHandler = MainHandler(Looper.getMainLooper())
+    private val serviceMap = mutableMapOf<String, ServiceInfo>()
+    private val mChannelMap = mutableMapOf<String, Channel>()
 
     var mRegistrationListener: RegistrationListener? = null
     var mDiscoveryListener: DiscoveryListener? = null
+    var mConnectionListener: ConnectionListener? = null
 
-    var discovering = false
+    @Volatile
+    private var discovering = false
+    @Volatile
+    private var registered = false
 
     private constructor(context: Context) {
         mNsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
         mWorkerThread = initWorkerThread()
         mWorkerThread.start()
-        mWorkerHandler = WorkerHandler(mWorkerThread.looper)
+        mWorkerHandler = WorkerHandler(this, mWorkerThread.looper)
     }
 
     private fun initWorkerThread() = HandlerThread("service-manager")
 
-    private inner class WorkerHandler(looper: Looper): Handler(looper) {
+    class WorkerHandler(private val serviceManager: ServiceManager, looper: Looper): Handler(looper) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
+            when(msg.what) {
+                MSG_WORKER_HEART_BEAT -> {
+                    val channel = msg.obj as Channel
+                    if (channel.isActive) {
+                        channel.heartbeat()
+                    }
+                }
+                MSG_WORKER_SERVER_DISCONNECT -> {
+                    val channel = msg.obj as Channel
+                    serviceManager.notifyServerDisconnected(channel.server, msg.arg1)
+                }
+                MSG_WORKER_SERVER_CONNECT -> {
+                    val channel = msg.obj as Channel
+                    serviceManager.notifyServerConnected(channel.server, msg.arg1)
+                }
+            }
         }
     }
 
-    private inner class MainHandler(looper: Looper): Handler(looper) {
-        override fun handleMessage(msg: Message) {
-            super.handleMessage(msg)
+    private inner class MainHandler(looper: Looper): Handler(looper)
 
+    fun notifyServerConnected(serviceInfo: ServiceInfo, resultCode: Int) {
+        runOnUiThread {
+            mConnectionListener?.onConnect(serviceInfo, resultCode)
+        }
+    }
+
+    fun notifyServerDisconnected(serviceInfo: ServiceInfo, resultCode: Int) {
+        mChannelMap.remove(serviceInfo.id)
+        runOnUiThread {
+            mConnectionListener?.onDisconnect(serviceInfo, resultCode)
         }
     }
 
@@ -52,24 +80,34 @@ class ServiceManager {
      * Register a service to be discovered by other services.
      */
     fun registerService(name: String) {
-        mWorkerHandler?.post {
-            val serviceInfo = NsdServiceInfo().apply {
-                serviceName = name
-                serviceType = LINK_SERVICE_TYPE
-                port = MESSAGE_SERVER_PORT
-                host = InetAddress.getByName(getIPv4Address())
+        runOnWorkerThread {
+            if (registered.not()) {
+                registered = true
+                val serviceInfo = NsdServiceInfo().apply {
+                    serviceName = name
+                    serviceType = LINK_SERVICE_TYPE
+                    port = MESSAGE_SERVER_PORT
+                }
+                println("registerService: ${serviceInfo}")
+                mNsdManager.registerService(
+                    serviceInfo,
+                    NsdManager.PROTOCOL_DNS_SD,
+                    registrationListener
+                )
             }
-            println("registerService: ${serviceInfo}")
-            mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener);
         }
+
     }
 
     /**
      * Unregister a service registered through {@link #registerService}
      */
     fun unregisterService() {
-        mWorkerHandler?.post {
-            mNsdManager.unregisterService(registrationListener)
+        runOnWorkerThread {
+            if (registered) {
+                registered = false
+                mNsdManager.unregisterService(registrationListener)
+            }
         }
     }
 
@@ -77,8 +115,8 @@ class ServiceManager {
      * 启动服务发现
      */
     fun startDiscovery() {
-        mWorkerHandler?.post {
-            if (!discovering) {
+        runOnWorkerThread {
+            if (discovering.not()) {
                 discovering = true
                 mNsdManager.discoverServices(LINK_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
             }
@@ -89,7 +127,7 @@ class ServiceManager {
      * 停止发现服务
      */
     fun stopDiscovery() {
-        mWorkerHandler?.post {
+        runOnWorkerThread {
             if (discovering) {
                 discovering = false
                 mNsdManager.stopServiceDiscovery(discoveryListener)
@@ -97,106 +135,161 @@ class ServiceManager {
         }
     }
 
+    /**
+     * 连接服务
+     */
+    fun connect(serviceInfo: ServiceInfo) {
+        if (mChannelMap.containsKey(serviceInfo.id)) {
+            println("You have already connected to this server")
+        } else {
+            val channel = Channel(mWorkerHandler, serviceInfo)
+            mChannelMap[serviceInfo.id] = channel
+            channel.connect()
+        }
+    }
+
+    /**
+     * 断开服务
+     */
+    fun disconnect(serviceInfo: ServiceInfo) {
+        if (mChannelMap.containsKey(serviceInfo.id)) {
+            val channel = mChannelMap[serviceInfo.id]
+            channel?.disconnect()
+        } else {
+            println("You can not disconnect a server unless you have connected to this server")
+        }
+    }
+
+    fun sendCastTask(channel: Channel, uri: String, type: MediaType) {
+        channel.sendCastTask(uri, type)
+    }
+
+    private fun runOnWorkerThread(r: () -> Unit) {
+        mWorkerHandler?.post(r)
+    }
+
+    private fun runOnUiThread(r: () -> Unit) {
+        mUiHandler.post(r)
+    }
+
     fun destroy() {
+        serviceMap.clear()
         mRegistrationListener = null
         mDiscoveryListener = null
+        mConnectionListener = null
         mWorkerThread.quit()
     }
 
     private val registrationListener = object : NsdManager.RegistrationListener {
         override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-            println("onUnregistrationFailed: errorCode = ${errorCode}")
-            mUiHandler.post {
+            println("onUnregistrationFailed: errorCode = $errorCode")
+            runOnUiThread {
                 mRegistrationListener?.onServiceUnregistered(SERVICE_RESULT_FAILED)
             }
         }
 
         override fun onServiceUnregistered(serviceInfo: NsdServiceInfo?) {
             println("onServiceUnregistered")
-            mUiHandler.post {
+            runOnUiThread {
                 mRegistrationListener?.onServiceUnregistered(SERVICE_RESULT_SUCCESS)
             }
         }
 
         override fun onRegistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
             println("onRegistrationFailed: errorCode = ${errorCode}")
-            mUiHandler.post {
+            runOnUiThread {
                 mRegistrationListener?.onServiceRegistered(SERVICE_RESULT_FAILED)
             }
         }
 
         override fun onServiceRegistered(serviceInfo: NsdServiceInfo?) {
             println("onServiceRegistered:")
-            mUiHandler.post {
+            runOnUiThread {
                 mRegistrationListener?.onServiceRegistered(SERVICE_RESULT_SUCCESS)
             }
         }
     }
 
-
     private val discoveryListener = object: NsdManager.DiscoveryListener {
+
         override fun onServiceFound(serviceInfo: NsdServiceInfo?) {
             println("onServiceFound: ${serviceInfo}")
             if (serviceInfo != null) {
-                mNsdManager.resolveService(serviceInfo, resolveListener)
-            }
+                mNsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
+                    override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
+                        println("onResolveFailed ${serviceInfo}")
+                    }
 
+                    override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
+                        println("onServiceFound -> onServiceResolved ${serviceInfo}")
+                        if (serviceInfo != null) {
+                            runOnUiThread {
+                                val sInfo = ServiceInfo(
+                                    serviceInfo.serviceName,
+                                    serviceInfo.host,
+                                    serviceInfo.port
+                                )
+                                serviceMap.put(sInfo.id, sInfo)
+                                mDiscoveryListener?.onServiceFound(sInfo)
+                            }
+                        }
+                    }
+                })
+            }
         }
 
         override fun onStopDiscoveryFailed(serviceType: String?, errorCode: Int) {
             println("onStopDiscoveryFailed: errorCode = ${errorCode}")
-            mUiHandler.post {
+            runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStop(SERVICE_RESULT_FAILED)
             }
         }
 
         override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
             println("onStartDiscoveryFailed: errorCode = ${errorCode}")
-            mUiHandler.post {
+            runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStart(SERVICE_RESULT_FAILED)
             }
         }
 
         override fun onDiscoveryStarted(serviceType: String?) {
             println("onDiscoveryStarted:")
-            mUiHandler.post {
+            runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStart(SERVICE_RESULT_SUCCESS)
             }
         }
 
         override fun onDiscoveryStopped(serviceType: String?) {
             println("onDiscoveryStopped:")
-            mUiHandler.post {
+            runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStop(SERVICE_RESULT_SUCCESS)
             }
         }
 
         override fun onServiceLost(serviceInfo: NsdServiceInfo?) {
-            println("onServiceLost:")
-            mUiHandler.post {
-                if (serviceInfo != null) {
-                    val sInfo = ServiceInfo(serviceInfo.serviceName, serviceInfo.host, serviceInfo.port)
-                    mDiscoveryListener?.onServiceLost(sInfo)
-                }
-            }
-        }
-    }
-
-    private val resolveListener = object: NsdManager.ResolveListener {
-        override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-            println("onResolveFailed ${serviceInfo}")
-        }
-
-        override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
+            println("onServiceLost:${serviceInfo}")
             if (serviceInfo != null) {
-                mUiHandler.post {
-                    val sInfo = ServiceInfo(serviceInfo.serviceName, serviceInfo.host, serviceInfo.port)
-                    mDiscoveryListener?.onServiceFound(sInfo)
-                }
+                mNsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
+                    override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) { }
+
+                    override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
+                        println("onServiceLost -> onServiceResolved ${serviceInfo}")
+                        runOnUiThread {
+                            if (serviceInfo != null) {
+                                val sInfo = ServiceInfo(
+                                    serviceInfo.serviceName,
+                                    serviceInfo.host,
+                                    serviceInfo.port
+                                )
+                                val cached = serviceMap.get(sInfo.id)
+                                mDiscoveryListener?.onServiceLost(cached ?: sInfo)
+                            }
+                        }
+                    }
+                })
             }
         }
     }
-
 
     companion object {
         @Volatile
@@ -258,4 +351,16 @@ interface DiscoveryListener {
      * @param serviceInfo 丢失的服务信息，一个{@link ServiceInfo}实例
      */
     fun onServiceLost(serviceInfo: ServiceInfo)
+}
+
+interface ConnectionListener {
+    /**
+     * 连接服务事件
+     */
+    fun onConnect(serviceInfo: ServiceInfo, resultCode: Int)
+
+    /**
+     * 断开服务事件
+     */
+    fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int)
 }
