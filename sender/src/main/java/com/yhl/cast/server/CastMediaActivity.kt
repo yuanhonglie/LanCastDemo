@@ -4,11 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import com.yhl.cast.server.albumpicker.model.AlbumFile
 import com.yhl.lanlink.ServiceInfo
+import com.yhl.lanlink.base.BaseActivity
 import kotlinx.android.synthetic.main.activity_media_type.*
 import kotlinx.android.synthetic.main.layout_lv_footer.*
 import kotlinx.android.synthetic.main.layout_lv_header.*
 
-class CastMediaActivity : LvBaseActivity() {
+class CastMediaActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

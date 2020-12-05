@@ -29,6 +29,7 @@ import com.yhl.cast.server.albumpicker.model.AlbumFolder;
 import com.yhl.cast.server.albumpicker.widget.photoview.ItemDivider;
 import com.yhl.lanlink.LanLink;
 import com.yhl.lanlink.ServiceInfo;
+import com.yhl.lanlink.base.BaseActivity;
 import com.yhl.lanlink.data.MediaType;
 
 import org.jetbrains.annotations.NotNull;
@@ -37,29 +38,20 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 
 /**
  * Created by tali on 2018/9/15.
  */
-public class AlbumPickActivity extends LvBaseActivity implements MediaReadTask.Callback {
+public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Callback {
 
     private static final String TAG = "AlbumPickActivity";
-    @BindView(R.id.layout_loading)
     LinearLayout mLayoutLoading;
-    @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
-    @BindView(R.id.iv_preview)
     ImageView mIvPreview;
-    @BindView(R.id.vv_preview)
     VideoView mVvPreview;
 
-    @BindView(R.id.tvVersion)
     TextView tvVersion;
 
-    @BindView(R.id.ivBack)
     View ivBack;
 
     private static final int PHOTO_LIMIT_COUNT = 10;
@@ -84,15 +76,19 @@ public class AlbumPickActivity extends LvBaseActivity implements MediaReadTask.C
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_album_pick);
-        ButterKnife.bind(this);
+        initView();
         initData();
-        ivBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-        tvVersion.setText("Demo V1.0");
+    }
+
+    private void initView() {
+        mLayoutLoading = findViewById(R.id.layout_loading);
+        mRecyclerView = findViewById(R.id.recyclerView);
+        mIvPreview = findViewById(R.id.iv_preview);
+        mVvPreview = findViewById(R.id.vv_preview);
+
+        ivBack = findViewById(R.id.ivBack);
+        ivBack.setOnClickListener(this::onClick);
+        findViewById(R.id.btn_cast).setOnClickListener(this::onClick);
     }
 
     protected void initData() {
@@ -174,12 +170,13 @@ public class AlbumPickActivity extends LvBaseActivity implements MediaReadTask.C
         super.onResume();
     }
 
-    @OnClick(R.id.btn_cast)
     void onClick(View view) {
         if (R.id.btn_cast == view.getId()) {
             AlbumFolder folder = mMediaType == AlbumFile.TYPE_IMAGE ? mAlbumFolder : mVideoFolder;
             AlbumFile albumFile = folder.getAlbumFiles().get(mAdapter.getSelectedItem());
             startPlayMedia(albumFile);
+        } else if (R.id.ivBack == view.getId()) {
+            onBackPressed();
         }
     }
 

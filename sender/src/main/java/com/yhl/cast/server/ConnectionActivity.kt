@@ -16,6 +16,7 @@ import android.widget.Toast
 import com.yhl.lanlink.InitializeListener
 import com.yhl.lanlink.LanLink
 import com.yhl.lanlink.ServiceInfo
+import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.interfaces.ConnectionListener
 import com.yhl.lanlink.interfaces.DiscoveryListener
 import kotlinx.android.synthetic.main.activity_connection.*
@@ -32,7 +33,7 @@ private const val MSG_CONNECT_FAILURE = 101
 private const val MSG_CONNECT_SUCCESS = 104
 private const val MSG_DISCONNECT = 103
 
-class ConnectionActivity: LvBaseActivity() {
+class ConnectionActivity: BaseActivity() {
 
     lateinit var adapter: DeviceAdapter
     lateinit var mUiHandler: UIHandler
