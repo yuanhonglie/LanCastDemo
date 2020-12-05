@@ -8,6 +8,7 @@ import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.GsonBuilder
 import com.yhl.lanlink.FILE_SERVER_PORT
+import com.yhl.lanlink.LanLink
 import com.yhl.lanlink.MESSAGE_SERVER_PORT
 import com.yhl.lanlink.MSG_UI_ACTIVITY_REGISTER
 import com.yhl.lanlink.data.ActionType
@@ -27,7 +28,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 abstract class BaseActivity: AppCompatActivity() {
 
-    private var serviceMessenger: Messenger? = null
     protected var serviceCache: MutableMap<Class<*>, Any> = mutableMapOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,9 +94,8 @@ abstract class BaseActivity: AppCompatActivity() {
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            serviceMessenger = Messenger(service)
-            sendMessage(MSG_UI_ACTIVITY_REGISTER)
-            handler.sendEmptyMessage(MSG_UI_ACTIVITY_REGISTER)
+            println("onServiceConnected: $clientMessenger")
+            LanLink.getInstance().setClientMessenger(clientMessenger)
             onConnected()
         }
 
@@ -118,11 +117,6 @@ abstract class BaseActivity: AppCompatActivity() {
             message.replyTo = clientMessenger
         }
         if (bundle != null) message.data = bundle
-        try {
-            serviceMessenger?.send(message)
-        } catch (e: RemoteException) {
-            println("sendMessage: error = ${e.message}")
-        }
     }
 
     protected fun onConnected() { }

@@ -3,7 +3,6 @@ ext {
     android = [
             compileSdkVersion: 28,
             buildToolsVersion: '28.0.3',
-            applicationId    : 'com.royole.dataclone',
             minSdkVersion    : 21,
             targetSdkVersion : 28,
             versionCode      : 30,
@@ -15,7 +14,7 @@ ext {
             runnerVersion       : '1.1.0',
             espressoVersion     : '3.1.0',
             robolectricVersion  : '4.1',
-            butterknifeVersion  : '10.1.0',
+            butterknifeVersion  : '10.2.3',
             multidexVersion     : '2.0.0',
             leakcanaryVersion   : '2.0-beta-2',
             stethoVersion       : '1.5.1',
@@ -35,6 +34,7 @@ ext {
             commonUtilVersion   : '1.0.0',
             commonLogVersion    : '1.0.2',
             okdownloadVersion   : '1.0.5',
+            cardview            : '27.1.1',
     ]
 
     dependencies = [
@@ -111,6 +111,7 @@ ext {
             "okdownload_okhttp"          : "com.liulishuo.okdownload:okhttp:${version["okdownloadVersion"]}",
             "okdownload_okdownload"      : "com.liulishuo.okdownload:okdownload:${version["okdownloadVersion"]}",
             "okdownload_sqlite"          : "com.liulishuo.okdownload:sqlite:${version["okdownloadVersion"]}",
+            "cardview"                   : "com.android.support:cardview-v7:${version["cardview"]}"
     ]
 
 }

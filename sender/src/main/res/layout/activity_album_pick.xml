@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@color/gray_e5e5e5">
+
+    <include
+        android:id="@+id/header"
+        layout="@layout/layout_lv_header"/>
+
+    <Button
+        android:id="@+id/btn_cast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/btn_cast_selector"
+        android:layout_marginTop="@dimen/view_item_margin"
+        android:layout_marginBottom="@dimen/view_item_margin"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true" />
+
+    <RelativeLayout
+        android:id="@+id/layout_preview"
+        android:layout_marginTop="@dimen/view_item_margin"
+        android:layout_marginBottom="@dimen/view_item_margin"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_below="@id/header"
+        android:layout_alignLeft="@id/btn_cast"
+        android:layout_alignRight="@id/btn_cast"
+        android:background="@drawable/lv_btn_selected">
+
+        <FrameLayout
+            android:id="@+id/preview_wrapper"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ImageView
+                android:id="@+id/iv_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible"/>
+            <VideoView
+                android:id="@+id/vv_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:visibility="invisible"/>
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/layout_preview"
+        android:layout_above="@id/btn_cast"
+        android:layout_alignLeft="@id/btn_cast"
+        android:layout_alignRight="@id/btn_cast"/>
+
+    <LinearLayout
+        android:id="@+id/layout_loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <com.yhl.cast.server.albumpicker.widget.ColorProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:text="Loading..."
+            android:textColor="#808080"
+            android:textSize="16sp" />
+    </LinearLayout>
+</RelativeLayout>

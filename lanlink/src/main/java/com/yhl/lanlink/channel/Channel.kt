@@ -3,16 +3,18 @@ package com.yhl.lanlink.channel
 import androidx.annotation.WorkerThread
 import com.google.gson.GsonBuilder
 import com.yhl.lanlink.*
-import com.yhl.lanlink.data.*
+import com.yhl.lanlink.data.ActionType
+import com.yhl.lanlink.data.Media
+import com.yhl.lanlink.data.MediaType
+import com.yhl.lanlink.data.TaskInfo
 import com.yhl.lanlink.http.HttpClient
 import com.yhl.lanlink.http.MediaServerApi
 import com.yhl.lanlink.nsd.ServiceManager
 import retrofit2.Converter
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 
-class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal val server: ServiceInfo) {
+internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal val server: ServiceInfo) {
 
     private var mToken: String? = null
     private var mLost = 0
@@ -23,18 +25,23 @@ class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal
         field = value
     }
 
+    @Volatile
+    var isConnected = false
+    private set(value) {
+        field = value
+    }
+
     init {
-        val baseUrl = "http://${server.host.hostAddress}:${server.port}"
+        val baseUrl = "http://${server.host}:${server.port}"
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(HttpClient.client)
             .addConverterFactory(getConverterFactory())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .build()
         mApi = retrofit.create<MediaServerApi>(MediaServerApi::class.java)
     }
 
-    protected open fun getConverterFactory(): Converter.Factory? {
+    private fun getConverterFactory(): Converter.Factory {
         val gson = GsonBuilder().setLenient().create()
         return GsonConverterFactory.create(gson)
     }
@@ -87,6 +94,7 @@ class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal
         msg.arg1 = resultCode
         msg.sendToTarget()
         if (resultCode == RESULT_SUCCESS) {
+            isConnected = true
             server.channel = this
             scheduleHeartbeat()
         }
@@ -94,7 +102,6 @@ class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal
 
     private fun onDisconnect(resultCode: Int) {
         close()
-        server.channel = null
         val msg = mWorkerHandler.obtainMessage(MSG_WORKER_SERVER_DISCONNECT)
         msg.obj = this
         msg.arg1 = resultCode
@@ -187,9 +194,6 @@ class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal
                 val result = response.body()
                 println("requestCastTask: result = $result")
                 if (result != null && result.errorCode == RESULT_SUCCESS) {
-                    val requestTimestamp = result.data as Long
-                    val nowTime = System.currentTimeMillis()
-                    val timeCost = nowTime - requestTimestamp
                 }
             } else {
                 println("requestCastTask: invalid token")
@@ -201,11 +205,13 @@ class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal
     }
 
     private fun runOnWorkerThread(r: () -> Unit) {
-        mWorkerHandler?.post(r)
+        mWorkerHandler.post(r)
     }
 
-    fun close() {
+    private fun close() {
+        isConnected = false
         isActive = false
-        mToken = null;
+        mToken = null
+        server.channel = null
     }
 }

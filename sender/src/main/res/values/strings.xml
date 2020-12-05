@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">CastSender</string>
+    <string name="nfc_write">数据写入</string>
+    <string name="upload_select_album_album_preview_fail">无法预览此视频</string>
+    <string name="upload_select_album_all">相册胶卷</string>
+    <string name="upload_select_album_video">视频</string>
+    <string name="common_next">下一步</string>
+    <string name="permission_storage">请到设置中开启存储权限</string>
+    <string name="upload_select_album_picture_limit">最多只能选择10张图片</string>
+    <string name="upload_select_album_video_limit_tip">上传的视频不能超过200MB</string>
+    <string name="upload_select_generate_button_android">生成图片轮播(%1$s )</string>
+    <string name="upload_select_space_page">最多添加10张图片/上传200MB视频</string>
+    <string name="upload_select_drafts_button">从草稿箱选择</string>
 </resources>

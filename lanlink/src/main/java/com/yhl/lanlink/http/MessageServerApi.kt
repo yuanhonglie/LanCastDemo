@@ -1,11 +1,7 @@
 package com.yhl.lanlink.http
 
-import com.yhl.lanlink.URI_CONNECTION_CONNECT
-import com.yhl.lanlink.URI_CONNECTION_DISCONNECT
-import com.yhl.lanlink.URI_CONNECTION_HEART_BEAT
-import com.yhl.lanlink.URI_MEDIA_TRANSFER
+import com.yhl.lanlink.*
 import com.yhl.lanlink.data.ResultData
-import com.yhl.lanlink.data.ServiceInfo
 import com.yhl.lanlink.data.TaskInfo
 import io.reactivex.Flowable
 import okhttp3.ResponseBody

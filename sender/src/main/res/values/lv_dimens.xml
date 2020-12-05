@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="lv_header_height">52dp</dimen>
+    <dimen name="lv_title_size">18sp</dimen>
+    <dimen name="lv_version_text_size">14sp</dimen>
+    <dimen name="lv_device_list_padding">10dp</dimen>
+    <dimen name="view_item_margin">15dp</dimen>
+    <dimen name="lv_item_margin_horizontal">40dp</dimen>
+    <dimen name="view_item_width">600dp</dimen>
+    <dimen name="device_list_view_height">150dp</dimen>
+    <dimen name="lv_device_item_height">50dp</dimen>
+    <dimen name="lv_rectangle_radius">14dp</dimen>
+    <dimen name="card_view_corner_radius">10dp</dimen>
+</resources>

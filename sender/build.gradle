@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-android-extensions'
     id 'kotlin-kapt'
+    id 'com.jakewharton.butterknife'
 }
 
 def config = rootProject.ext.android
@@ -50,4 +51,11 @@ dependencies {
     implementation project(":lanlink")
     implementation libraries.rxandroid2
     implementation libraries.rxjava2
+    implementation libraries.butterknife
+    annotationProcessor libraries.butterknife_compiler
+    //implementation libraries.cardview
+    /* glide */
+    implementation libraries.glide
+    kapt libraries.glide_compiler
+    api files('libs/andpermission-release-v2.0.4.jar')
 }

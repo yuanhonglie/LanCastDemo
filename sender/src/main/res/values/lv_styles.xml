@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LvButtonStyle">
+        <item name="android:background">@drawable/lv_btn_bg</item>
+        <item name="android:textColor">@drawable/lv_btn_text_color_selector</item>
+    </style>
+</resources>

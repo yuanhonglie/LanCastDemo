@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@color/gray_e5e5e5">
+
+    <include
+        android:id="@+id/lvHeader"
+        layout="@layout/layout_lv_header"/>
+
+    <ImageView
+        android:id="@+id/ivBanner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/lvHeader"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/view_item_margin"
+        android:layout_marginBottom="@dimen/view_item_margin"
+        android:background="@drawable/lv_banner"/>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/device_list_view_height"
+        android:layout_below="@id/ivBanner"
+        android:layout_alignLeft="@id/ivBanner"
+        android:layout_alignRight="@id/ivBanner"
+        android:background="@drawable/stroke_rectangle_normal"
+        app:cardCornerRadius="@dimen/lv_rectangle_radius">
+
+        <ListView
+            android:id="@+id/lvDevices"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </androidx.cardview.widget.CardView>
+
+    <Button
+        android:id="@+id/btnConnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/btn_connect_selector"
+        android:layout_marginTop="@dimen/view_item_margin"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/cardView"/>
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/btn_disconnect_selector"
+        android:layout_marginTop="@dimen/view_item_margin"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnConnect"/>
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="@dimen/view_item_margin"
+        layout="@layout/layout_lv_footer"/>
+
+</RelativeLayout>

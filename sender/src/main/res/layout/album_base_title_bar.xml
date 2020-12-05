@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/title_layout"
+    android:layout_width="match_parent"
+    android:layout_height="53dp"
+    android:background="@color/transparent"
+    android:clickable="true">
+
+    <RelativeLayout
+        android:id="@+id/layout_left"
+        android:layout_width="53dp"
+        android:layout_height="53dp"
+        android:layout_alignParentLeft="true">
+
+        <ImageView
+            android:id="@+id/btn_left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:scaleType="centerCrop"
+            android:layout_centerInParent="true"
+            android:src="@drawable/icon_close"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/tv_left"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_centerVertical="true"
+            android:textColor="@drawable/album_text_selector"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_centerInParent="true"
+            android:maxWidth="100dp"
+            android:singleLine="true"
+            android:ellipsize="middle"
+            android:visibility="gone"/>
+
+    </RelativeLayout>
+
+
+
+    <com.yhl.cast.server.albumpicker.widget.ArrowTextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:maxWidth="200dp"
+        android:gravity="center"
+        android:singleLine="true"
+        android:ellipsize="middle"
+        android:textSize="17sp"
+        android:textColor="@drawable/album_text_selector"
+        android:layout_centerInParent="true" />
+
+    <TextView
+        android:id="@+id/tv_right"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:maxWidth="100dp"
+        android:singleLine="true"
+        android:ellipsize="middle"
+        android:textSize="12sp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:layout_marginRight="24dp"
+        android:visibility="gone"
+        android:textColor="@drawable/album_text_selector"
+        android:clickable="true" />
+
+
+</RelativeLayout>

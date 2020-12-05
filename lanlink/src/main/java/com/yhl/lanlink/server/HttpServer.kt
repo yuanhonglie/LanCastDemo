@@ -1,17 +1,8 @@
 package com.yhl.lanlink.server
 
-import android.os.Message
-import android.os.Messenger
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import com.yhl.lanlink.*
-import com.yhl.lanlink.data.ResultData
-import com.yhl.lanlink.data.ServiceInfo
-import com.yhl.lanlink.data.TaskInfo
 import com.yhl.lanlink.util.getIPv4Address
 import fi.iki.elonen.NanoHTTPD
-import java.io.InputStreamReader
 
 
 class HttpServer(var mConnectionManager: ConnectionManager): NanoHTTPD(MESSAGE_SERVER_PORT) {

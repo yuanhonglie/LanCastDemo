@@ -1,23 +1,22 @@
 package com.yhl.cast.server
 
+import android.content.Context
 import android.os.Bundle
 import android.os.Handler
-import com.yhl.lanlink.RESULT_SUCCESS
+import android.os.IBinder
+import android.widget.Toast
+import com.yhl.lanlink.*
 import com.yhl.lanlink.base.BaseActivity
-import com.yhl.lanlink.channel.Channel
 import com.yhl.lanlink.data.MediaType
-import com.yhl.lanlink.data.ServiceInfo
-import com.yhl.lanlink.nsd.ConnectionListener
-import com.yhl.lanlink.nsd.DiscoveryListener
-import com.yhl.lanlink.nsd.ServiceManager
+import com.yhl.lanlink.interfaces.ConnectionListener
+import com.yhl.lanlink.interfaces.DiscoveryListener
 import kotlinx.android.synthetic.main.activity_server.*
 
 
 class ServerActivity : BaseActivity(), DiscoveryListener {
     private var mServiceInfo: ServiceInfo? = null
-    private var mChannel: Channel? = null
     private var mUiHandler = Handler()
-    private lateinit var mServiceManager: ServiceManager
+    private lateinit var mLanLink: LanLink
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,46 +47,53 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
             val serviceInfo = mServiceInfo
             disconnectService(serviceInfo)
         }
-        mServiceManager = ServiceManager.getInstance(this)
-        mServiceManager.mConnectionListener = object : ConnectionListener {
+        mLanLink = LanLink.getInstance()
+        mLanLink.setConnectionListener(object : ConnectionListener {
             override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
                 println("onConnect: $serviceInfo resultCode = $resultCode")
                 if (resultCode == RESULT_SUCCESS) {
-                    mChannel = serviceInfo.channel
+                    toast("连接客户端${serviceInfo.name}成功")
+                } else {
+                    toast("连接客户端${serviceInfo.name}失败")
                 }
             }
 
             override fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int) {
                 println("onDisconnect: $serviceInfo resultCode = $resultCode")
-                mChannel = null
+                toast("断开接收端${serviceInfo.name}, $resultCode")
             }
-
-        }
+        })
     }
 
     private fun sendCastTask(uri: String, type: MediaType) {
-        mChannel?.sendCastTask(uri, type)
+        val serviceInfo = mServiceInfo
+        if (serviceInfo != null) {
+            println("sendCastTask isConnected = ${serviceInfo.isConnected()}")
+            LanLink.getInstance().sendCastTask(serviceInfo, uri, type)
+        } else {
+            toast("请先连接接收端！")
+        }
     }
 
     private fun connectService(serviceInfo: ServiceInfo?) {
         if (serviceInfo != null) {
-            mServiceManager.connect(serviceInfo)
+            mLanLink.connect(serviceInfo)
         }
     }
 
     private fun disconnectService(serviceInfo: ServiceInfo?) {
         if (serviceInfo != null) {
-            mServiceManager.disconnect(serviceInfo)
+            mLanLink.disconnect(serviceInfo)
         }
     }
 
     private fun startServiceDiscover() {
-        ServiceManager.getInstance(this).mDiscoveryListener = this
-        ServiceManager.getInstance(this).startDiscovery()
+        LanLink.getInstance().setDiscoveryListener(this)
+        LanLink.getInstance().startDiscovery()
     }
 
     private fun stopServiceDiscover() {
-        ServiceManager.getInstance(this).stopDiscovery()
+        LanLink.getInstance().stopDiscovery()
         mServiceInfo = null
     }
 
@@ -104,7 +110,7 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
     ) etVideoPath.text.toString() else "/sdcard/media/video03.mp4"
 
     override fun getBaseUrl() = getMessageServerUrl()
-    override fun getClientHost() = mServiceInfo?.host?.hostAddress ?: "xxx.xxx.xxx.xxx"
+    override fun getClientHost() = mServiceInfo?.host ?: "xxx.xxx.xxx.xxx"
 
     override fun onDiscoveryStart(resultCode: Int) {
         println("onDiscoveryStart: ${resultCode}")
@@ -124,5 +130,9 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
 
     override fun onServiceLost(serviceInfo: ServiceInfo) {
         println("onServiceLost: ${serviceInfo} id=${serviceInfo.id}")
+    }
+
+    fun Context.toast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 }

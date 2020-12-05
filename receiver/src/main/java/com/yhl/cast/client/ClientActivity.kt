@@ -1,6 +1,7 @@
 package com.yhl.cast.client
 
 import android.os.Bundle
+import android.os.IBinder
 import android.os.Message
 import android.util.Log
 import android.view.View
@@ -8,13 +9,13 @@ import com.bumptech.glide.Glide
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import com.yhl.lanlink.LINK_SERVICE_RECEIVER
+import com.yhl.lanlink.LanLink
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.Media
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.TaskInfo
 import com.yhl.lanlink.http.HttpClient
-import com.yhl.lanlink.nsd.RegistrationListener
-import com.yhl.lanlink.nsd.ServiceManager
+import com.yhl.lanlink.interfaces.RegistrationListener
 import com.yhl.lanlink.util.getIPv4Address
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
@@ -69,13 +70,13 @@ class ClientActivity : BaseActivity(), RegistrationListener {
     }
 
     private fun startServiceBroadcast() {
-        val serviceManager = ServiceManager.getInstance(this)
-        serviceManager.mRegistrationListener = this
-        serviceManager.registerService("${LINK_SERVICE_RECEIVER}#1")
+        val mLanLink = LanLink.getInstance()
+        mLanLink.setRegistrationListener(this)
+        mLanLink.registerService("${LINK_SERVICE_RECEIVER}#1")
     }
 
     private fun stopServiceBroadcast() {
-        ServiceManager.getInstance(this).unregisterService()
+        LanLink.getInstance().unregisterService()
     }
 
     override fun getBaseUrl() = getMessageServerUrl()
@@ -137,6 +138,7 @@ class ClientActivity : BaseActivity(), RegistrationListener {
         when (msg.what) {
             100 -> {
                 val taskInfo = msg.obj
+                println("onMessage: taskInfo = $taskInfo")
                 if (taskInfo is TaskInfo) {
                     val media = taskInfo.media
                     playMedia(media)

@@ -7,9 +7,9 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.yhl.lanlink.*
 import com.yhl.lanlink.data.ResultData
-import com.yhl.lanlink.data.ServiceInfo
 import com.yhl.lanlink.data.TaskInfo
 import fi.iki.elonen.NanoHTTPD
+import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
 
@@ -43,6 +43,7 @@ class ConnectionManager(var mUiMessenger: Messenger? = null) {
     ): NanoHTTPD.Response {
         val token = parseToken(session)
         return if (validateToken(token) || true) {
+            println("parseMediaTransferBody: $mUiMessenger")
             val adapter = mGson.getAdapter(TypeToken.get(TaskInfo::class.java))
             val reader = InputStreamReader(session.inputStream)
             val taskInfo = adapter.fromJson(reader)

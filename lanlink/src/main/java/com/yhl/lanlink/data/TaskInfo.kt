@@ -39,17 +39,4 @@ enum class PlayMode(val value: Int) {
     default(0), loop(1)
 }
 
-data class ServiceInfo(val name: String?, val host: InetAddress, val port: Int) {
-
-    @Transient
-    var channel: Channel? = null
-    constructor(name: String?, host: String, port: Int): this(name, InetAddress.getByName(host), port)
-
-    val id: String
-    init {
-        val address = host.hostAddress
-        id = "$name-$address-$port".md5()
-    }
-}
-
 data class ResultData<T>(val errorCode: Int, val errorMessage: String, val timestamp: Long, var data: T? = null)

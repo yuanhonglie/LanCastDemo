@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/layoutWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/tvDevice"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/lv_device_item_height"
+            android:textColor="@drawable/lv_btn_text_color_selector"
+            android:textSize="@dimen/lv_version_text_size"
+            android:gravity="center"
+            android:background="@drawable/device_item_bg_top"/>
+    </FrameLayout>
+
+
+
+</LinearLayout>
