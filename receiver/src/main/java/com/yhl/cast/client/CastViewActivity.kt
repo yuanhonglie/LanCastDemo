@@ -2,17 +2,19 @@ package com.yhl.cast.client
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Message
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.Media
 import com.yhl.lanlink.data.MediaType
+import com.yhl.lanlink.data.TaskInfo
 import kotlinx.android.synthetic.main.activity_cast_view.*
 
 const val KEY_MEDIA_INFO = "media"
 const val KEY_CAST_EXIT = "exit"
 
-class CastViewActivity : AppCompatActivity() {
+class CastViewActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +63,23 @@ class CastViewActivity : AppCompatActivity() {
     private fun stopVideo() {
         if (vvVideo.isPlaying) {
             vvVideo.stopPlayback()
+        }
+    }
+
+    override fun onMessage(msg: Message) {
+        super.onMessage(msg)
+        when (msg.what) {
+            100 -> {
+                val taskInfo = msg.obj
+                println("onMessage: taskInfo = $taskInfo")
+                if (taskInfo is TaskInfo) {
+                    val media = taskInfo.media
+                    playMedia(media)
+                }
+            }
+            101 -> {
+                onBackPressed()
+            }
         }
     }
 

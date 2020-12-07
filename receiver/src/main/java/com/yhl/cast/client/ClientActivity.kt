@@ -29,9 +29,6 @@ import okhttp3.Request
 class ClientActivity : BaseActivity(), RegistrationListener {
     private val TAG = ClientActivity::class.simpleName
 
-    private var castViewStarted = false
-    private var paused = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_client)
@@ -128,33 +125,12 @@ class ClientActivity : BaseActivity(), RegistrationListener {
                 println("onMessage: taskInfo = $taskInfo")
                 if (taskInfo is TaskInfo) {
                     val media = taskInfo.media
-                    //playMedia(media)
-                    val intent = Intent(this, CastViewActivity::class.java)
-                    intent.putExtra(KEY_MEDIA_INFO, media)
-                    startActivity(intent)
-                    castViewStarted = true
-                }
-            }
-            101 -> {
-                if (paused && castViewStarted) {
-                    val intent = Intent(this, CastViewActivity::class.java)
-                    intent.putExtra(KEY_CAST_EXIT, true)
-                    startActivity(intent)
+                    playMedia(media)
                 }
             }
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        paused = true
-    }
-
-    override fun onResume() {
-        super.onResume()
-        paused = false
-        castViewStarted = false
-    }
 
     override fun onServiceRegistered(resultCode: Int) {
         println("onServiceRegistered: ${resultCode}")

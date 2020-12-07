@@ -18,8 +18,6 @@ import kotlinx.android.synthetic.main.layout_lv_header.*
 import java.util.*
 
 class ReceiverActivity : BaseActivity(), View.OnClickListener {
-    private var castViewStarted = false
-    private var paused = false
     private var mDeviceName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,13 +133,10 @@ class ReceiverActivity : BaseActivity(), View.OnClickListener {
 
     override fun onPause() {
         super.onPause()
-        paused = true
     }
 
     override fun onResume() {
         super.onResume()
-        paused = false
-        castViewStarted = false
     }
 
     override fun onMessage(msg: Message) {
@@ -155,14 +150,6 @@ class ReceiverActivity : BaseActivity(), View.OnClickListener {
                     //playMedia(media)
                     val intent = Intent(this, CastViewActivity::class.java)
                     intent.putExtra(KEY_MEDIA_INFO, media)
-                    startActivity(intent)
-                    castViewStarted = true
-                }
-            }
-            101 -> {
-                if (paused && castViewStarted) {
-                    val intent = Intent(this, CastViewActivity::class.java)
-                    intent.putExtra(KEY_CAST_EXIT, true)
                     startActivity(intent)
                 }
             }

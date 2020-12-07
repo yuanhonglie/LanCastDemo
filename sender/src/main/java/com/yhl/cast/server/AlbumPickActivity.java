@@ -266,7 +266,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
     public void onBackPressed() {
         super.onBackPressed();
         if (mServiceInfo != null) {
-            //LanLink.Companion.getInstance().sendCastExit(mServiceInfo);
+            LanLink.Companion.getInstance().sendCastExit(mServiceInfo);
         }
 
         if (mMediaReadTask != null) {
