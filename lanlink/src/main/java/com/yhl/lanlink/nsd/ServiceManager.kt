@@ -189,6 +189,12 @@ class ServiceManager: ILanLinkService {
         }
     }
 
+
+    override fun sendCastExit(serviceId: String?) {
+        val serviceInfo = serviceMap[serviceId]
+        serviceInfo?.sendCastExit()
+    }
+
     private fun runOnWorkerThread(r: () -> Unit) {
         mWorkerHandler.post(r)
     }
@@ -255,8 +261,13 @@ class ServiceManager: ILanLinkService {
                                     serviceInfo.host.hostAddress,
                                     serviceInfo.port
                                 )
-                                serviceMap.put(sInfo.id, sInfo)
-                                mDiscoveryListener?.onServiceFound(sInfo)
+                                if (serviceMap.containsKey(sInfo.id)) {
+                                    val cached = serviceMap[sInfo.id]
+                                    mDiscoveryListener?.onServiceFound(cached)
+                                } else {
+                                    serviceMap.put(sInfo.id, sInfo)
+                                    mDiscoveryListener?.onServiceFound(sInfo)
+                                }
                             }
                         }
                     }

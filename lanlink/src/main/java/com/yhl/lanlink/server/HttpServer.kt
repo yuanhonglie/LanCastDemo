@@ -19,6 +19,7 @@ class HttpServer(var mConnectionManager: ConnectionManager): NanoHTTPD(MESSAGE_S
     private fun parseBody(session: IHTTPSession): Response? {
         return when(session.uri) {
             URI_MEDIA_TRANSFER -> mConnectionManager.parseMediaTransferBody(this, session)
+            URI_MEDIA_CAST_EXIT -> mConnectionManager.parseMediaCastExitBody(this, session)
             URI_CONNECTION_CONNECT -> mConnectionManager.parseClientConnect(this, session)
             URI_CONNECTION_DISCONNECT -> mConnectionManager.parseClientDisconnect(this, session)
             URI_CONNECTION_HEART_BEAT -> mConnectionManager.parseHeartbeat(this, session)

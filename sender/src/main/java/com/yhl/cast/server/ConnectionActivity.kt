@@ -24,8 +24,6 @@ import kotlinx.android.synthetic.main.layout_lv_footer.*
 import kotlinx.android.synthetic.main.layout_lv_header.*
 
 const val TAG = "ConnectionActivity"
-const val APP_ID = "15910"
-const val APP_SECRET = "51884efacdece7c53cac25ff580d70ed"
 const val SERVICE_INFO = "SERVICE_INFO"
 const val MEDIA_TYPE = "MEDIA_TYPE"
 private const val MSG_SEARCH_RESULT = 100
@@ -164,7 +162,7 @@ class ConnectionActivity: BaseActivity() {
 
     private fun startCastMediaActivity() {
         if (mSelectInfo != null) {
-            Log.i(TAG, "startCastMediaActivity: service = " + mSelectInfo?.name)
+            Log.i(TAG, "startCastMediaActivity: service = " + System.identityHashCode(mSelectInfo))
             val intent = Intent()
             intent.setClass(this, CastMediaActivity::class.java)
             intent.putExtra(SERVICE_INFO, mSelectInfo)
@@ -326,10 +324,6 @@ class ConnectionActivity: BaseActivity() {
         Process.killProcess(Process.myPid())
         System.exit(0)
     }
-
-    override fun getBaseUrl() = ""
-
-    override fun getClientHost() = ""
 
     private fun disconnectDevice() {
         val serviceInfo = mSelectInfo

@@ -53,4 +53,8 @@ class ServiceBinder(private val serviceManager: ServiceManager) : ILanLinkServic
     override fun sendCastTask(serviceId: String?, uri: String?, mediaType: String?) {
         serviceManager.sendCastTask(serviceId, uri, mediaType)
     }
+
+    override fun sendCastExit(serviceId: String?) {
+        serviceManager.sendCastExit(serviceId)
+    }
 }

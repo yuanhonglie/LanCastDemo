@@ -4,7 +4,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Handler
 import android.os.IBinder
+import android.os.Message
 import android.os.Messenger
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.interfaces.*
@@ -20,6 +22,16 @@ class LanLink: ILanLink {
             initializeListener?.onInitialized()
         }
     }
+
+    var messageListener: MessageListener? = null
+    private val handler = object : Handler() {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            messageListener?.onMessage(msg)
+        }
+    }
+    private val clientMessenger = Messenger(handler)
+
     @Volatile
     var isInitialized: Boolean = false
     private set(value) {
@@ -45,6 +57,7 @@ class LanLink: ILanLink {
         println("onInitialized: ")
         initializeListener?.onInitialized()
         isInitialized = true
+        setClientMessenger(clientMessenger)
     }
 
     override fun registerService(name: String) {
@@ -94,6 +107,10 @@ class LanLink: ILanLink {
         service?.sendCastTask(serviceInfo.id, uri, mediaType.toString())
     }
 
+    override fun sendCastExit(serviceInfo: ServiceInfo) {
+        service?.sendCastExit(serviceInfo.id)
+    }
+
     override fun destroy() {
         service?.destroy()
     }
@@ -123,4 +140,8 @@ class LanLink: ILanLink {
 
 interface InitializeListener {
     fun onInitialized()
+}
+
+interface MessageListener {
+    fun onMessage(message: Message)
 }

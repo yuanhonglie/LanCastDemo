@@ -87,6 +87,12 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
         }
     }
 
+    fun sendCastExit() {
+        runOnWorkerThread {
+            requestCastExit()
+        }
+    }
+
     private fun onConnect(resultCode: Int) {
         isActive = true
         val msg = mWorkerHandler.obtainMessage(MSG_WORKER_SERVER_CONNECT)
@@ -190,6 +196,26 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
             val token = mToken
             if (token != null) {
                 val call = mApi.requestTransfer(token, taskInfo)
+                val response = call.execute()
+                val result = response.body()
+                println("requestCastTask: result = $result")
+                if (result != null && result.errorCode == RESULT_SUCCESS) {
+                }
+            } else {
+                println("requestCastTask: invalid token")
+            }
+        } catch (e: Exception) {
+            println("requestCastTask: error = ${e.message}")
+        }
+
+    }
+
+    @WorkerThread
+    private fun requestCastExit() {
+        try {
+            val token = mToken
+            if (token != null) {
+                val call = mApi.requestCastExit(token)
                 val response = call.execute()
                 val result = response.body()
                 println("requestCastTask: result = $result")

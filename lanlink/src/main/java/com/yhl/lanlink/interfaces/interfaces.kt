@@ -87,5 +87,7 @@ interface ILanLink {
 
     fun sendCastTask(serviceInfo: ServiceInfo, uri: String, type: MediaType)
 
+    fun sendCastExit(serviceInfo: ServiceInfo)
+
     fun destroy()
 }

@@ -20,6 +20,11 @@ const val URI_CONNECTION_DISCONNECT = "/connection/disconnect"
  */
 const val URI_MEDIA_TRANSFER = "/media/transfer"
 
+/**
+ * 退出投屏界面
+ */
+const val URI_MEDIA_CAST_EXIT = "/media/cast/exit"
+
 const val RESULT_SUCCESS = 0
 const val RESULT_FAILED_UNKNOWN = -1
 const val RESULT_FAILED_SERVER_TIMEOUT = -2
@@ -39,7 +44,7 @@ const val MESSAGE_SERVER_PORT = 18030
 /**
  * 心跳周期
  */
-const val INTERVAL_HEART_BEAT = 5000L
+const val INTERVAL_HEART_BEAT = 10000L
 const val MAX_SERVER_HEART_BEAT_LOST = 3
 
 const val LINK_SERVICE_TYPE = "_lanlink._tcp."

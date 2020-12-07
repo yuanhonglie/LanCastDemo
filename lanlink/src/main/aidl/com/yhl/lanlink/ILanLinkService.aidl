@@ -29,5 +29,7 @@ interface ILanLinkService {
 
     void sendCastTask(String serviceId, String uri, String mediaType);
 
+    void sendCastExit(String serviceId);
+
     void destroy();
 }

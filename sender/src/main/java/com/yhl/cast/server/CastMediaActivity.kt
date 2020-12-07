@@ -33,7 +33,4 @@ class CastMediaActivity : BaseActivity() {
         startActivity(intent)
     }
 
-    override fun getBaseUrl() = ""
-    override fun getClientHost() = ""
-
 }

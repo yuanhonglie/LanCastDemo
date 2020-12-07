@@ -109,9 +109,6 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
             .not()
     ) etVideoPath.text.toString() else "/sdcard/media/video03.mp4"
 
-    override fun getBaseUrl() = getMessageServerUrl()
-    override fun getClientHost() = mServiceInfo?.host ?: "xxx.xxx.xxx.xxx"
-
     override fun onDiscoveryStart(resultCode: Int) {
         println("onDiscoveryStart: ${resultCode}")
     }

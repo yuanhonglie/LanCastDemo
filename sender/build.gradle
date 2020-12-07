@@ -56,5 +56,6 @@ dependencies {
     /* glide */
     implementation libraries.glide
     kapt libraries.glide_compiler
-    api files('libs/andpermission-release-v2.0.4.jar')
+    //api files('libs/andpermission-release-v2.0.4.jar')
+    implementation libraries.andPermission
 }

@@ -92,7 +92,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
     }
 
     protected void initData() {
-        if (getIntent()!=null) {
+        if (getIntent() != null) {
             isShowDevice = getIntent().getBooleanExtra("isShowDevice", false);
             deviceType = getIntent().getIntExtra("DeviceType", 0);
             mServiceInfo = getIntent().getParcelableExtra(ConnectionActivityKt.SERVICE_INFO);
@@ -215,8 +215,9 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
             mVideoFolder.setChecked(false);
             mVideoFolder.setName(getString(R.string.upload_select_album_video));
             for (AlbumFile file : mAlbumFolder.getAlbumFiles()) {
-                if (file.getMediaType() == AlbumFile.TYPE_VIDEO)
+                if (file.getMediaType() == AlbumFile.TYPE_VIDEO) {
                     mVideoFolder.addAlbumFile(file);
+                }
             }
             AlbumFolder folder = mMediaType == AlbumFile.TYPE_VIDEO ? mVideoFolder : mAlbumFolder;
             mAdapter.setAlbumFiles(folder.getAlbumFiles());
@@ -230,7 +231,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
     private void selectFirstAlbumFile() {
         if (mAlbumFolder.getAlbumFiles().size() > 0) {
             for (AlbumFile file : mAlbumFolder.getAlbumFiles()) {
-                if (file.getMediaType() == AlbumFile.TYPE_IMAGE){
+                if (file.getMediaType() == AlbumFile.TYPE_IMAGE) {
                     mAdapter.setVideoFilter(true);
                     mAdapter.setPicFilter(false);
                     file.setChecked(true);
@@ -264,6 +265,10 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        if (mServiceInfo != null) {
+            //LanLink.Companion.getInstance().sendCastExit(mServiceInfo);
+        }
+
         if (mMediaReadTask != null) {
             mMediaReadTask.cancel(true);
         }
@@ -316,7 +321,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
 
     void startPlayMedia(AlbumFile albumFile) {
         if (null == mServiceInfo) {
-            Toast.makeText(getApplicationContext(), "请选择接设备", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "请连接设备", Toast.LENGTH_SHORT).show();
             return;
         }
         String url = albumFile.getPath();
@@ -330,22 +335,10 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
                 type = MediaType.video;
                 break;
         }
-        LanLink.Companion.getInstance().sendCastTask(mServiceInfo, url, type);
+        LanLink.Companion.getInstance().sendCastTask(mServiceInfo, getFileServerUrl() + url, type);
     }
 
     private void showShort(@StringRes int resId) {
         Toast.makeText(this, resId, Toast.LENGTH_SHORT);
-    }
-
-    @NotNull
-    @Override
-    public String getBaseUrl() {
-        return null;
-    }
-
-    @NotNull
-    @Override
-    public String getClientHost() {
-        return null;
     }
 }

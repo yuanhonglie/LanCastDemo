@@ -93,4 +93,8 @@ fun ServiceInfo.sendCastTask(uri: String, type: MediaType) {
     channel?.sendCastTask(uri, type)
 }
 
+fun ServiceInfo.sendCastExit() {
+    channel?.sendCastExit()
+}
+
 fun ServiceInfo.isConnected() = channel?.isConnected ?: false

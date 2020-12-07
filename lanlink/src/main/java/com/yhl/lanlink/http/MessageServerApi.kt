@@ -41,6 +41,12 @@ interface MediaServerApi {
     @Headers("Content-Type:application/json")
     @POST(URI_MEDIA_TRANSFER)
     fun requestTransfer(@Header("token") token: String, @Body task: TaskInfo): Call<ResultData<String>>
+    /**
+     * 请求屏幕镜像
+     */
+    @Headers("Content-Type:application/json")
+    @POST(URI_MEDIA_CAST_EXIT)
+    fun requestCastExit(@Header("token") token: String): Call<ResultData<String>>
 
     /**
      * 请求屏幕镜像

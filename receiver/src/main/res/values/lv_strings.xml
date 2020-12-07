@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lv_title">LV&amp;ROYOLE</string>
+    <string name="label_search">Search Handbag</string>
+    <string name="label_stop_search">Stop Search</string>
+    <string name="label_connect">Connect</string>
+    <string name="label_disconnect">Disconnect</string>
+
+    <string name="label_cast_video">Cast video</string>
+    <string name="label_cast_image">Cast image</string>
+    <string name="label_cast_media">Cast media</string>
+    <string name="label_cast">Cast</string>
+</resources>

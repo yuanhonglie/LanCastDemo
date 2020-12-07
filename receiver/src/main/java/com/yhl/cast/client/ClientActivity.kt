@@ -1,5 +1,6 @@
 package com.yhl.cast.client
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Message
@@ -27,6 +28,10 @@ import okhttp3.Request
 
 class ClientActivity : BaseActivity(), RegistrationListener {
     private val TAG = ClientActivity::class.simpleName
+
+    private var castViewStarted = false
+    private var paused = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_client)
@@ -79,10 +84,6 @@ class ClientActivity : BaseActivity(), RegistrationListener {
         LanLink.getInstance().unregisterService()
     }
 
-    override fun getBaseUrl() = getMessageServerUrl()
-
-    override fun getClientHost() = "192.168.12.110"
-
     override fun finish() {
         super.finish()
         stopVideo()
@@ -116,22 +117,8 @@ class ClientActivity : BaseActivity(), RegistrationListener {
     }
 
     private fun requestMessageServer() {
-        Observable.create<String> { emitter: ObservableEmitter<String> ->
-            val response = HttpClient.client.newCall(createHttpRequest()).execute()
-            response.body?.let {
-                emitter.onNext(it.string())
-                emitter.onComplete()
-            }
-        }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                Log.i(TAG, "requestServer: response = $it")
-                tvContent.text = it
-            }
-    }
 
-    private fun createHttpRequest() = Request.Builder().url(getMessageServerUrl()).build()
+    }
 
     override fun onMessage(msg: Message) {
         super.onMessage(msg)
@@ -141,10 +128,32 @@ class ClientActivity : BaseActivity(), RegistrationListener {
                 println("onMessage: taskInfo = $taskInfo")
                 if (taskInfo is TaskInfo) {
                     val media = taskInfo.media
-                    playMedia(media)
+                    //playMedia(media)
+                    val intent = Intent(this, CastViewActivity::class.java)
+                    intent.putExtra(KEY_MEDIA_INFO, media)
+                    startActivity(intent)
+                    castViewStarted = true
+                }
+            }
+            101 -> {
+                if (paused && castViewStarted) {
+                    val intent = Intent(this, CastViewActivity::class.java)
+                    intent.putExtra(KEY_CAST_EXIT, true)
+                    startActivity(intent)
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        paused = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        paused = false
+        castViewStarted = false
     }
 
     override fun onServiceRegistered(resultCode: Int) {

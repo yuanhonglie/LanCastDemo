@@ -58,6 +58,25 @@ class ConnectionManager(var mUiMessenger: Messenger? = null) {
         }
     }
 
+
+    fun parseMediaCastExitBody(
+        httpServer: HttpServer,
+        session: NanoHTTPD.IHTTPSession
+    ): NanoHTTPD.Response {
+        val token = parseToken(session)
+        return if (validateToken(token) || true) {
+            println("parseMediaTransferBody: $mUiMessenger")
+            val msg = Message.obtain().apply {
+                what = 101
+            }
+            mUiMessenger?.send(msg)
+            newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
+        } else {
+            newSimpleResultDataResponse(RESULT_FAILED, RESULT_MESSAGE_INVALID_TOKEN)
+        }
+    }
+
+
     /**
      * 解析心跳包
      * @param session
