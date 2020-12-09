@@ -54,7 +54,7 @@ class ConnectionActivity: BaseActivity() {
 
         LanLink.getInstance().initializeListener = object : InitializeListener {
             override fun onInitialized() {
-                LanLink.getInstance().setConnectionListener(object : ConnectionListener {
+                LanLink.getInstance().connectionListener = object : ConnectionListener {
                     override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
                         Toast.makeText(this@ConnectionActivity, "已连接 $serviceInfo", Toast.LENGTH_LONG).show()
                         onServiceConnected(serviceInfo)
@@ -64,9 +64,12 @@ class ConnectionActivity: BaseActivity() {
                         Toast.makeText(this@ConnectionActivity, "$serviceInfo 已断开", Toast.LENGTH_LONG).show()
                     }
 
-                })
+                    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
+                        println("onMessage: type=$type, data=$data")
+                    }
+                }
 
-                LanLink.getInstance().setDiscoveryListener(object : DiscoveryListener{
+                LanLink.getInstance().discoveryListener = object : DiscoveryListener{
                     override fun onDiscoveryStart(resultCode: Int) {
                         Toast.makeText(this@ConnectionActivity, "开始扫描服务", Toast.LENGTH_LONG).show()
                     }
@@ -82,8 +85,7 @@ class ConnectionActivity: BaseActivity() {
                     override fun onServiceLost(serviceInfo: ServiceInfo) {
                         adapter.remove(serviceInfo)
                     }
-
-                })
+                }
 
                 LanLink.getInstance().startDiscovery()
                 isSearching = true

@@ -6,12 +6,13 @@ import android.net.nsd.NsdServiceInfo
 import android.os.*
 import com.yhl.lanlink.*
 import com.yhl.lanlink.channel.Channel
+import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.server.ConnectionManager
 
-class ServiceManager: ILanLinkService {
+class ServiceManager private constructor(context: Context): ILanLinkService.Stub() {
     private val TAG = ServiceManager::class.simpleName
-    private lateinit var mNsdManager: NsdManager
+    private var mNsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var mWorkerThread: HandlerThread
     private var mWorkerHandler: WorkerHandler
     private val mUiHandler = MainHandler(Looper.getMainLooper())
@@ -27,10 +28,9 @@ class ServiceManager: ILanLinkService {
     @Volatile
     private var registered = false
 
-    val mConnectionManager = ConnectionManager()
+    val mConnectionManager = ConnectionManager(this)
 
-    private constructor(context: Context) {
-        mNsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+    init {
         mWorkerThread = initWorkerThread()
         mWorkerThread.start()
         mWorkerHandler = WorkerHandler(this, mWorkerThread.looper)
@@ -166,7 +166,6 @@ class ServiceManager: ILanLinkService {
 
     override fun setClientMessenger(messenger: Messenger?) {
         println("setClientMessenger: $messenger")
-        mConnectionManager.mUiMessenger = messenger
     }
 
     override fun setRegistrationListener(listener: IRegistrationListener?) {
@@ -181,11 +180,11 @@ class ServiceManager: ILanLinkService {
         mConnectionListener = listener
     }
 
-    override fun sendCastTask(serviceId: String?, uri: String?, mediaType: String?) {
+    override fun sendCastTask(serviceId: String?, uri: String?, mediaType: String?, actionType: String?) {
         val serviceInfo = serviceMap[serviceId]
         println("sendCastTask: serviceInfo=$serviceInfo uri=$uri mediaType=$mediaType")
-        if (uri != null && mediaType != null) {
-            serviceInfo?.sendCastTask(uri, MediaType.valueOf(mediaType))
+        if (uri != null && mediaType != null && actionType != null) {
+            serviceInfo?.sendCastTask(uri, MediaType.valueOf(mediaType), ActionType.valueOf(actionType))
         }
     }
 
@@ -193,6 +192,17 @@ class ServiceManager: ILanLinkService {
     override fun sendCastExit(serviceId: String?) {
         val serviceInfo = serviceMap[serviceId]
         serviceInfo?.sendCastExit()
+    }
+
+    override fun send(serviceId: String?, msg: Msg?) {
+        val serviceInfo = serviceMap[serviceId]
+        if (msg != null) {
+            serviceInfo?.sendMessage(msg)
+        }
+    }
+
+    fun onReceiveMessage(serviceInfo: ServiceInfo, msg: Msg) {
+        mConnectionListener?.onMessage(serviceInfo, msg)
     }
 
     private fun runOnWorkerThread(r: () -> Unit) {

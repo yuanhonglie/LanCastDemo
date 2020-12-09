@@ -8,12 +8,13 @@ import com.google.gson.reflect.TypeToken
 import com.yhl.lanlink.*
 import com.yhl.lanlink.data.ResultData
 import com.yhl.lanlink.data.TaskInfo
+import com.yhl.lanlink.nsd.ServiceManager
 import fi.iki.elonen.NanoHTTPD
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
 
-class ConnectionManager(var mUiMessenger: Messenger? = null) {
+class ConnectionManager(private val serviceManager: ServiceManager) {
 
     private var mGson: Gson = GsonBuilder().setLenient().create()
 
@@ -43,7 +44,7 @@ class ConnectionManager(var mUiMessenger: Messenger? = null) {
     ): NanoHTTPD.Response {
         val token = parseToken(session)
         return if (validateToken(token) || true) {
-            println("parseMediaTransferBody: $mUiMessenger")
+            //println("parseMediaTransferBody: $mUiMessenger")
             val adapter = mGson.getAdapter(TypeToken.get(TaskInfo::class.java))
             val reader = InputStreamReader(session.inputStream)
             val taskInfo = adapter.fromJson(reader)
@@ -51,7 +52,7 @@ class ConnectionManager(var mUiMessenger: Messenger? = null) {
                 what = 100
                 obj = taskInfo
             }
-            mUiMessenger?.send(msg)
+            //mUiMessenger?.send(msg)
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
             newSimpleResultDataResponse(RESULT_FAILED, RESULT_MESSAGE_INVALID_TOKEN)
@@ -65,11 +66,30 @@ class ConnectionManager(var mUiMessenger: Messenger? = null) {
     ): NanoHTTPD.Response {
         val token = parseToken(session)
         return if (validateToken(token) || true) {
-            println("parseMediaTransferBody: $mUiMessenger")
+            //println("parseMediaTransferBody: $mUiMessenger")
             val msg = Message.obtain().apply {
                 what = 101
             }
-            mUiMessenger?.send(msg)
+            //mUiMessenger?.send(msg)
+            newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
+        } else {
+            newSimpleResultDataResponse(RESULT_FAILED, RESULT_MESSAGE_INVALID_TOKEN)
+        }
+    }
+
+    fun parseSendMessageBody(
+        httpServer: HttpServer,
+        session: NanoHTTPD.IHTTPSession
+    ): NanoHTTPD.Response {
+        val token = parseToken(session)
+        return if (validateToken(token) || true) {
+            val adapter = mGson.getAdapter(Msg::class.java)
+            val reader = InputStreamReader(session.inputStream)
+            val msg = adapter.fromJson(reader)
+            val serviceInfo = mClientMap[token]
+            if (serviceInfo != null) {
+                serviceManager.onReceiveMessage(serviceInfo, msg)
+            }
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
             newSimpleResultDataResponse(RESULT_FAILED, RESULT_MESSAGE_INVALID_TOKEN)

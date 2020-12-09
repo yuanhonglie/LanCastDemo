@@ -9,15 +9,37 @@
         android:id="@+id/header"
         layout="@layout/layout_lv_header"/>
 
-    <Button
-        android:id="@+id/btn_cast"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/btn_Wrapper"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/btn_cast_selector"
         android:layout_marginTop="@dimen/view_item_margin"
         android:layout_marginBottom="@dimen/view_item_margin"
         android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true" />
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btn_cast"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="media cast"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="5dp"
+            android:textColor="@drawable/lv_btn_text_color_selector"
+            android:background="@drawable/lv_btn_bg"/>
+        <Button
+            android:id="@+id/btn_transfer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="file transfer"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="10dp"
+            android:textColor="@drawable/lv_btn_text_color_selector"
+            android:background="@drawable/lv_btn_bg" />
+    </LinearLayout>
+
 
     <RelativeLayout
         android:id="@+id/layout_preview"
@@ -26,8 +48,8 @@
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_below="@id/header"
-        android:layout_alignLeft="@id/btn_cast"
-        android:layout_alignRight="@id/btn_cast"
+        android:layout_alignLeft="@id/btn_Wrapper"
+        android:layout_alignRight="@id/btn_Wrapper"
         android:background="@drawable/lv_btn_selected">
 
         <FrameLayout
@@ -54,9 +76,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/layout_preview"
-        android:layout_above="@id/btn_cast"
-        android:layout_alignLeft="@id/btn_cast"
-        android:layout_alignRight="@id/btn_cast"/>
+        android:layout_above="@id/btn_Wrapper"
+        android:layout_alignLeft="@id/btn_Wrapper"
+        android:layout_alignRight="@id/btn_Wrapper"/>
 
     <LinearLayout
         android:id="@+id/layout_loading"

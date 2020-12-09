@@ -2,9 +2,6 @@ package com.yhl.lanlink.data
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.yhl.lanlink.channel.Channel
-import com.yhl.lanlink.util.md5
-import java.net.InetAddress
 
 data class Media(var uri: String, var mediaType: MediaType, var name: String = ""): Parcelable {
     var mimeType: String = ""
@@ -47,7 +44,7 @@ data class Media(var uri: String, var mediaType: MediaType, var name: String = "
     }
 }
 
-data class TaskInfo(var media: Media, var actionType: ActionType = ActionType.cast, var playMode: PlayMode = PlayMode.default, var albumName: String = "") {
+data class TaskInfo(var media: Media, var actionType: ActionType = ActionType.cast, var playMode: PlayMode = PlayMode.single, var albumName: String = "") {
 
     /*
     var list: MutableList<Media> = mutableListOf()
@@ -73,7 +70,7 @@ enum class ActionType(val value: Int) {
 }
 
 enum class PlayMode(val value: Int) {
-    default(0), loop(1)
+    single(0), loop(1)
 }
 
 data class ResultData<T>(val errorCode: Int, val errorMessage: String, val timestamp: Long, var data: T? = null)

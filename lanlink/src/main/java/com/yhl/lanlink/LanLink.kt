@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
+import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.interfaces.*
 import com.yhl.lanlink.server.HttpService
@@ -16,12 +17,19 @@ class LanLink: ILanLink {
 
     private var service: ILanLinkService? = null
     var initializeListener: InitializeListener? = null
-    set(value) {
-        field = value
-        if (isInitialized) {
-            initializeListener?.onInitialized()
+        set(value) {
+            field = value
+            if (isInitialized) {
+                initializeListener?.onInitialized()
+            }
         }
-    }
+
+    var connectionListener: ConnectionListener? = null
+    var registrationListener: RegistrationListener? = null
+    var discoveryListener: DiscoveryListener? = null
+
+    var messageCodecs = mutableMapOf<String, MessageCodec>()
+        private set(value) { }
 
     var messageListener: MessageListener? = null
     private val handler = object : Handler() {
@@ -41,7 +49,13 @@ class LanLink: ILanLink {
     private constructor(context: Context) {
         val connection = object: ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-                service = ILanLinkService.Stub.asInterface(binder)
+                val service = ILanLinkService.Stub.asInterface(binder)
+                service?.let {
+                    it.setRegistrationListener(IRegistrationListenerImpl(this@LanLink))
+                    it.setDiscoveryListener(IDiscoveryListenerImpl(this@LanLink))
+                    it.setConnectionListener(IConnectionListenerImpl(this@LanLink))
+                }
+                this@LanLink.service = service
                 onInitialized()
             }
 
@@ -91,24 +105,28 @@ class LanLink: ILanLink {
         service?.setClientMessenger(messenger)
     }
 
-    override fun setRegistrationListener(listener: RegistrationListener?) {
-        service?.setRegistrationListener(IRegistrationListenerImpl(listener))
+    override fun registerMessageCodec(codec: MessageCodec) {
+        if (messageCodecs.containsKey(codec.getMessageType())) {
+            throw RuntimeException("You have register a codec with the same message type \"${codec.getMessageType()}\"")
+        } else {
+            messageCodecs.put(codec.getMessageType(), codec)
+        }
     }
 
-    override fun setDiscoveryListener(listener: DiscoveryListener?) {
-        service?.setDiscoveryListener(IDiscoveryListenerImpl(listener))
-    }
-
-    override fun setConnectionListener(listener: ConnectionListener?) {
-        service?.setConnectionListener(IConnectionListenerImpl(listener))
-    }
-
-    override fun sendCastTask(serviceInfo: ServiceInfo, uri: String, mediaType: MediaType) {
-        service?.sendCastTask(serviceInfo.id, uri, mediaType.toString())
+    override fun sendCastTask(serviceInfo: ServiceInfo, uri: String, mediaType: MediaType, actionType: ActionType) {
+        service?.sendCastTask(serviceInfo.id, uri, mediaType.toString(), actionType.toString())
     }
 
     override fun sendCastExit(serviceInfo: ServiceInfo) {
         service?.sendCastExit(serviceInfo.id)
+    }
+
+    override fun sendMessage(serviceInfo: ServiceInfo, msg: Any) {
+        val tag = msg::class.qualifiedName
+        val codec = messageCodecs[tag]
+        if (codec != null) {
+            service?.send(serviceInfo.id, codec.encodeInner(msg))
+        }
     }
 
     override fun destroy() {

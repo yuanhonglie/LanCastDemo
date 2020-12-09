@@ -13,6 +13,7 @@ import com.yhl.lanlink.nsd.ServiceManager
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 
 internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal val server: ServiceInfo) {
 
@@ -81,11 +82,18 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
         }
     }
 
-    fun sendCastTask(uri: String, type: MediaType) {
+    fun sendCastTask(uri: String, type: MediaType, action: ActionType) {
         runOnWorkerThread {
-            requestCastTask(uri, type)
+            requestCastTask(uri, type, action)
         }
     }
+
+    fun sendMessage(msg: Msg) {
+        runOnWorkerThread {
+            requestSendMessage(msg)
+        }
+    }
+
 
     fun sendCastExit() {
         runOnWorkerThread {
@@ -188,9 +196,10 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
     }
 
     @WorkerThread
-    private fun requestCastTask(uri: String, type: MediaType) {
+    private fun requestCastTask(uri: String, type: MediaType, action: ActionType) {
         val media = Media(uri,type)
-        val taskInfo = TaskInfo(media, ActionType.cast)
+        media.name = File(uri).name
+        val taskInfo = TaskInfo(media, action)
 
         try {
             val token = mToken
@@ -207,7 +216,6 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
         } catch (e: Exception) {
             println("requestCastTask: error = ${e.message}")
         }
-
     }
 
     @WorkerThread
@@ -227,7 +235,25 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
         } catch (e: Exception) {
             println("requestCastTask: error = ${e.message}")
         }
+    }
 
+    @WorkerThread
+    private fun requestSendMessage(msg: Msg) {
+        try {
+            val token = mToken
+            if (token != null) {
+                val call = mApi.requestSendMessage(token, msg)
+                val response = call.execute()
+                val result = response.body()
+                println("requestSendMessage: result = $result")
+                if (result != null && result.errorCode == RESULT_SUCCESS) {
+                }
+            } else {
+                println("requestSendMessage: invalid token")
+            }
+        } catch (e: Exception) {
+            println("requestCastTask: error = ${e.message}")
+        }
     }
 
     private fun runOnWorkerThread(r: () -> Unit) {

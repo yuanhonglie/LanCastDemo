@@ -30,11 +30,16 @@ import com.yhl.cast.server.albumpicker.widget.photoview.ItemDivider;
 import com.yhl.lanlink.LanLink;
 import com.yhl.lanlink.ServiceInfo;
 import com.yhl.lanlink.base.BaseActivity;
+import com.yhl.lanlink.data.ActionType;
+import com.yhl.lanlink.data.Media;
 import com.yhl.lanlink.data.MediaType;
+import com.yhl.lanlink.data.PlayMode;
+import com.yhl.lanlink.data.TaskInfo;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,6 +94,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
         ivBack = findViewById(R.id.ivBack);
         ivBack.setOnClickListener(this::onClick);
         findViewById(R.id.btn_cast).setOnClickListener(this::onClick);
+        findViewById(R.id.btn_transfer).setOnClickListener(this::onClick);
     }
 
     protected void initData() {
@@ -174,7 +180,12 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
         if (R.id.btn_cast == view.getId()) {
             AlbumFolder folder = mMediaType == AlbumFile.TYPE_IMAGE ? mAlbumFolder : mVideoFolder;
             AlbumFile albumFile = folder.getAlbumFiles().get(mAdapter.getSelectedItem());
-            startPlayMedia(albumFile);
+            startPlayMedia(albumFile, ActionType.cast);
+        } else if (R.id.btn_transfer == view.getId()) {
+            AlbumFolder folder = mMediaType == AlbumFile.TYPE_IMAGE ? mAlbumFolder : mVideoFolder;
+            AlbumFile albumFile = folder.getAlbumFiles().get(mAdapter.getSelectedItem());
+            LanLink.Companion.getInstance().sendCastExit(mServiceInfo);
+            startPlayMedia(albumFile, ActionType.store);
         } else if (R.id.ivBack == view.getId()) {
             onBackPressed();
         }
@@ -266,7 +277,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
     public void onBackPressed() {
         super.onBackPressed();
         if (mServiceInfo != null) {
-            LanLink.Companion.getInstance().sendCastExit(mServiceInfo);
+            //LanLink.Companion.getInstance().sendCastExit(mServiceInfo);
         }
 
         if (mMediaReadTask != null) {
@@ -319,7 +330,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
         }
     }
 
-    void startPlayMedia(AlbumFile albumFile) {
+    void startPlayMedia(AlbumFile albumFile, ActionType actionType) {
         if (null == mServiceInfo) {
             Toast.makeText(getApplicationContext(), "请连接设备", Toast.LENGTH_SHORT).show();
             return;
@@ -335,7 +346,11 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
                 type = MediaType.video;
                 break;
         }
-        LanLink.Companion.getInstance().sendCastTask(mServiceInfo, getFileServerUrl() + url, type);
+        String name = new File(url).getName();
+        Media media = new Media(url, type, name);
+        TaskInfo taskInfo = new TaskInfo(media, actionType, PlayMode.single, "test-album-name");
+        //LanLink.Companion.getInstance().sendCastTask(mServiceInfo, getFileServerUrl() + url, type, actionType);
+        LanLink.Companion.getInstance().sendMessage(mServiceInfo, taskInfo);
     }
 
     private void showShort(@StringRes int resId) {

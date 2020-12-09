@@ -1,10 +1,8 @@
 package com.yhl.lanlink.interfaces
 
 import android.os.Messenger
-import com.yhl.lanlink.IConnectionListener
-import com.yhl.lanlink.IDiscoveryListener
-import com.yhl.lanlink.IRegistrationListener
-import com.yhl.lanlink.ServiceInfo
+import com.yhl.lanlink.*
+import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 
 interface RegistrationListener {
@@ -60,7 +58,12 @@ interface ConnectionListener {
     /**
      * 断开服务事件
      */
-    fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int);
+    fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int)
+
+    /**
+     * 自定义消息事件
+     */
+    fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any)
 }
 
 interface ILanLink {
@@ -77,17 +80,28 @@ interface ILanLink {
 
     fun disconnect(serviceInfo: ServiceInfo)
 
-    fun setRegistrationListener(listener: RegistrationListener?)
-
-    fun setDiscoveryListener(listener: DiscoveryListener?)
-
-    fun setConnectionListener(listener: ConnectionListener?)
-
     fun setClientMessenger(messenger: Messenger)
 
-    fun sendCastTask(serviceInfo: ServiceInfo, uri: String, type: MediaType)
+    fun registerMessageCodec(codec: MessageCodec)
+
+    fun sendCastTask(serviceInfo: ServiceInfo, uri: String, type: MediaType, action: ActionType)
 
     fun sendCastExit(serviceInfo: ServiceInfo)
 
+    fun sendMessage(serviceInfo: ServiceInfo, msg: Any)
+
     fun destroy()
+}
+
+abstract class MessageCodec {
+
+    abstract fun getMessageType() : String
+
+    abstract  fun encode(msg: Any): ByteArray
+
+    abstract fun decode(data: ByteArray): Any
+
+    internal fun encodeInner(data: Any) = Msg(getMessageType(), encode(data))
+
+    internal fun decodeInner(msg: Msg) = decode(msg.data)
 }

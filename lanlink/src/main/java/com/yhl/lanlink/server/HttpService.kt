@@ -2,16 +2,10 @@ package com.yhl.lanlink.server
 
 import android.app.Service
 import android.content.Intent
-import android.os.Handler
 import android.os.IBinder
-import android.os.Message
-import android.os.Messenger
 import android.util.Log
-import com.yhl.lanlink.*
 import com.yhl.lanlink.nsd.ServiceManager
 import fi.iki.elonen.NanoHTTPD
-import java.io.FileDescriptor
-import java.io.PrintWriter
 
 val TAG = HttpService::class.simpleName
 class HttpService: Service() {
@@ -21,7 +15,7 @@ class HttpService: Service() {
     override fun onBind(intent: Intent?): IBinder? {
         val serviceManager = ServiceManager.getInstance(this)
         startServer(serviceManager)
-        return ServiceBinder(serviceManager)
+        return serviceManager
     }
 
     private fun startServer(serviceManager: ServiceManager) {

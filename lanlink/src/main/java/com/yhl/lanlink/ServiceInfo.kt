@@ -3,6 +3,7 @@ package com.yhl.lanlink
 import android.os.Parcel
 import android.os.Parcelable
 import com.yhl.lanlink.channel.Channel
+import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.util.md5
 
@@ -89,12 +90,16 @@ class ServiceInfo: Parcelable {
     }
 }
 
-fun ServiceInfo.sendCastTask(uri: String, type: MediaType) {
-    channel?.sendCastTask(uri, type)
+fun ServiceInfo.sendCastTask(uri: String, type: MediaType, action: ActionType) {
+    channel?.sendCastTask(uri, type, action)
 }
 
 fun ServiceInfo.sendCastExit() {
     channel?.sendCastExit()
+}
+
+fun ServiceInfo.sendMessage(msg: Msg) {
+    channel?.sendMessage(msg)
 }
 
 fun ServiceInfo.isConnected() = channel?.isConnected ?: false

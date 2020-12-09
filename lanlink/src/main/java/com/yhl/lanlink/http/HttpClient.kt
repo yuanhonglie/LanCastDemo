@@ -14,6 +14,4 @@ object HttpClient {
             .readTimeout(TIME_OUT, TimeUnit.SECONDS)
         client = builder.build()
     }
-
-
 }

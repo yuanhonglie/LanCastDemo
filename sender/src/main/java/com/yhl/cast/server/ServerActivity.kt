@@ -7,6 +7,7 @@ import android.os.IBinder
 import android.widget.Toast
 import com.yhl.lanlink.*
 import com.yhl.lanlink.base.BaseActivity
+import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.interfaces.ConnectionListener
 import com.yhl.lanlink.interfaces.DiscoveryListener
@@ -48,7 +49,7 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
             disconnectService(serviceInfo)
         }
         mLanLink = LanLink.getInstance()
-        mLanLink.setConnectionListener(object : ConnectionListener {
+        mLanLink.connectionListener = object : ConnectionListener {
             override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
                 println("onConnect: $serviceInfo resultCode = $resultCode")
                 if (resultCode == RESULT_SUCCESS) {
@@ -62,14 +63,18 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
                 println("onDisconnect: $serviceInfo resultCode = $resultCode")
                 toast("断开接收端${serviceInfo.name}, $resultCode")
             }
-        })
+
+            override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
+                println("onMessage: type=$type, data=$data")
+            }
+        }
     }
 
     private fun sendCastTask(uri: String, type: MediaType) {
         val serviceInfo = mServiceInfo
         if (serviceInfo != null) {
             println("sendCastTask isConnected = ${serviceInfo.isConnected()}")
-            LanLink.getInstance().sendCastTask(serviceInfo, uri, type)
+            LanLink.getInstance().sendCastTask(serviceInfo, uri, type, ActionType.cast)
         } else {
             toast("请先连接接收端！")
         }
@@ -88,7 +93,7 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
     }
 
     private fun startServiceDiscover() {
-        LanLink.getInstance().setDiscoveryListener(this)
+        LanLink.getInstance().discoveryListener = this
         LanLink.getInstance().startDiscovery()
     }
 

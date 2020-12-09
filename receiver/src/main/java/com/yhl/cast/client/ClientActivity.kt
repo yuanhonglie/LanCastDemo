@@ -73,7 +73,7 @@ class ClientActivity : BaseActivity(), RegistrationListener {
 
     private fun startServiceBroadcast() {
         val mLanLink = LanLink.getInstance()
-        mLanLink.setRegistrationListener(this)
+        mLanLink.registrationListener = this
         mLanLink.registerService("${LINK_SERVICE_RECEIVER}#1")
     }
 

@@ -18,12 +18,17 @@ const val URI_CONNECTION_DISCONNECT = "/connection/disconnect"
 /**
  * 媒体传送
  */
-const val URI_MEDIA_TRANSFER = "/media/transfer"
+const val URI_CAST_TRANSFER = "/channel/cast/transfer"
 
 /**
  * 退出投屏界面
  */
-const val URI_MEDIA_CAST_EXIT = "/media/cast/exit"
+const val URI_CAST_EXIT = "/channel/cast/exit"
+
+/**
+ * 发送消息
+ */
+const val URI_SEND_MESSAGE = "/channel/msg"
 
 const val RESULT_SUCCESS = 0
 const val RESULT_FAILED_UNKNOWN = -1

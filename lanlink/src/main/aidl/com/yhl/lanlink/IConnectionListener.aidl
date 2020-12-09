@@ -1,6 +1,7 @@
 package com.yhl.lanlink;
 
 import com.yhl.lanlink.ServiceInfo;
+import com.yhl.lanlink.Msg;
 
 interface IConnectionListener {
     /**
@@ -12,4 +13,7 @@ interface IConnectionListener {
      * 断开服务事件
      */
     void onDisconnect(out ServiceInfo serviceInfo, int resultCode);
+
+
+    void onMessage(out ServiceInfo serviceInfo, inout Msg msg);
 }

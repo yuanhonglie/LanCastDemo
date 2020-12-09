@@ -7,6 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import java.text.DecimalFormat
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -20,5 +21,19 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.yhl.cast", appContext.packageName)
+    }
+
+    @Test
+    fun floatFormat1() {
+        val text = String.format("%.02f", 1.200f)
+        assertEquals("1.20", text)
+    }
+
+    @Test
+    fun floatFormat2() {
+
+        val format = DecimalFormat(".##")
+        assertEquals("1.2", format.format(1.200f))
+        assertEquals("1.21", format.format(1.210f))
     }
 }
