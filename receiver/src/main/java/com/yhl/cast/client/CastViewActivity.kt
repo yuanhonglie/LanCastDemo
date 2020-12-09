@@ -6,7 +6,9 @@ import android.os.Message
 import android.text.TextUtils
 import android.view.View
 import com.bumptech.glide.Glide
+import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
+import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.Media
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.TaskInfo
@@ -77,22 +79,16 @@ class CastViewActivity : BaseActivity() {
         }
     }
 
-    override fun onMessage(msg: Message) {
-        super.onMessage(msg)
-        when (msg.what) {
-            100 -> {
-                val taskInfo = msg.obj
-                println("onMessage: taskInfo = $taskInfo")
-                if (taskInfo is TaskInfo) {
-                    val media = taskInfo.media
-                    playMedia(media)
+    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
+        super.onMessage(serviceInfo, type, data)
+        when (type) {
+            TaskInfo::class.qualifiedName -> {
+                if (data is TaskInfo) {
+                    if (data.actionType == ActionType.cast) {
+                        playMedia(data.media)
+                    }
                 }
-            }
-            101 -> {
-                onBackPressed()
             }
         }
     }
-
-
 }

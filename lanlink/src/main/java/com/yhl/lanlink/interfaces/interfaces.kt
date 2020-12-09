@@ -59,12 +59,16 @@ interface ConnectionListener {
      * 断开服务事件
      */
     fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int)
+}
 
+
+interface MessageListener {
     /**
      * 自定义消息事件
      */
     fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any)
 }
+
 
 interface ILanLink {
 
@@ -84,7 +88,7 @@ interface ILanLink {
 
     fun registerMessageCodec(codec: MessageCodec)
 
-    fun sendCastTask(serviceInfo: ServiceInfo, uri: String, type: MediaType, action: ActionType)
+    fun sendCastTask(serviceInfo: ServiceInfo, uri: String, mediaType: MediaType, actionType: ActionType)
 
     fun sendCastExit(serviceInfo: ServiceInfo)
 

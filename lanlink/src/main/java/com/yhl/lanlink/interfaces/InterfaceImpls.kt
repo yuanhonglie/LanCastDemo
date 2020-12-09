@@ -41,9 +41,9 @@ class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListene
             println("onMessage: ${msg.tag}")
             println("onMessage: ${msg.data}")
             val codec = lanLink.messageCodecs[msg.tag]
-            if (codec != null) {
+            if (codec != null && lanLink.messageListener != null) {
                 val data = codec.decodeInner(msg)
-                lanLink.connectionListener?.onMessage(serviceInfo, msg.tag, data)
+                lanLink.onMessage(serviceInfo, msg.tag, data)
             }
         }
     }

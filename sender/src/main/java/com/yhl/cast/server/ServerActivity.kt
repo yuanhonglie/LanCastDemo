@@ -63,10 +63,6 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
                 println("onDisconnect: $serviceInfo resultCode = $resultCode")
                 toast("断开接收端${serviceInfo.name}, $resultCode")
             }
-
-            override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
-                println("onMessage: type=$type, data=$data")
-            }
         }
     }
 

@@ -16,6 +16,7 @@ import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.yhl.lanlink.LanLink.Companion.getInstance
+import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.Media
@@ -153,20 +154,18 @@ class ReceiverActivity : BaseActivity(), View.OnClickListener, OnItemClickListen
         System.exit(0)
     }
 
-    override fun onMessage(msg: Message) {
-        super.onMessage(msg)
-        when (msg.what) {
-            100 -> {
-                val taskInfo = msg.obj
-                println("onMessage: taskInfo = $taskInfo")
-                if (taskInfo is TaskInfo) {
-                    if (taskInfo.actionType == ActionType.cast) {
-                        val media = taskInfo.media
+    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
+        super.onMessage(serviceInfo, type, data)
+        when (type) {
+            TaskInfo::class.qualifiedName -> {
+                if (data is TaskInfo) {
+                    if (data.actionType == ActionType.cast) {
+                        val media = data.media
                         val intent = Intent(this, CastViewActivity::class.java)
                         intent.putExtra(KEY_MEDIA_INFO, media)
                         startActivity(intent)
-                    } else if (taskInfo.actionType == ActionType.store) {
-                        val mediaItem = MediaItem(taskInfo.media)
+                    } else if (data.actionType == ActionType.store) {
+                        val mediaItem = MediaItem(data.media)
                         startDownload(mediaItem)
                         mAdapter.add(mediaItem)
                     }

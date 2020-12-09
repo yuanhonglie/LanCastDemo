@@ -4,10 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Handler
-import android.os.IBinder
-import android.os.Message
-import android.os.Messenger
+import android.os.*
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.interfaces.*
@@ -25,20 +22,14 @@ class LanLink: ILanLink {
         }
 
     var connectionListener: ConnectionListener? = null
+    var messageListener: MessageListener? = null
     var registrationListener: RegistrationListener? = null
     var discoveryListener: DiscoveryListener? = null
 
     var messageCodecs = mutableMapOf<String, MessageCodec>()
-        private set(value) { }
-
-    var messageListener: MessageListener? = null
-    private val handler = object : Handler() {
-        override fun handleMessage(msg: Message) {
-            super.handleMessage(msg)
-            messageListener?.onMessage(msg)
+        private set(value) {
+            field = value
         }
-    }
-    private val clientMessenger = Messenger(handler)
 
     @Volatile
     var isInitialized: Boolean = false
@@ -46,17 +37,17 @@ class LanLink: ILanLink {
         field = value
     }
 
+    var uiHandler = Handler(Looper.getMainLooper())
+
     private constructor(context: Context) {
         val connection = object: ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                 val service = ILanLinkService.Stub.asInterface(binder)
                 service?.let {
-                    it.setRegistrationListener(IRegistrationListenerImpl(this@LanLink))
-                    it.setDiscoveryListener(IDiscoveryListenerImpl(this@LanLink))
-                    it.setConnectionListener(IConnectionListenerImpl(this@LanLink))
+                    onInitialized()
                 }
                 this@LanLink.service = service
-                onInitialized()
+
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
@@ -69,9 +60,13 @@ class LanLink: ILanLink {
 
     private fun onInitialized() {
         println("onInitialized: ")
+        service?.let {
+            it.setRegistrationListener(IRegistrationListenerImpl(this))
+            it.setDiscoveryListener(IDiscoveryListenerImpl(this))
+            it.setConnectionListener(IConnectionListenerImpl(this))
+        }
         initializeListener?.onInitialized()
         isInitialized = true
-        setClientMessenger(clientMessenger)
     }
 
     override fun registerService(name: String) {
@@ -129,7 +124,18 @@ class LanLink: ILanLink {
         }
     }
 
+    fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
+        runOnUiThread {
+            messageListener?.onMessage(serviceInfo, type, data)
+        }
+    }
+
+    private fun runOnUiThread(r: () -> Unit) {
+        uiHandler.post(r)
+    }
+
     override fun destroy() {
+        uiHandler.removeCallbacksAndMessages(null)
         service?.destroy()
     }
 
@@ -158,8 +164,4 @@ class LanLink: ILanLink {
 
 interface InitializeListener {
     fun onInitialized()
-}
-
-interface MessageListener {
-    fun onMessage(message: Message)
 }

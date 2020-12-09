@@ -10,8 +10,11 @@ import com.yhl.lanlink.data.ResultData
 import com.yhl.lanlink.data.TaskInfo
 import com.yhl.lanlink.nsd.ServiceManager
 import fi.iki.elonen.NanoHTTPD
+import okio.Buffer
 import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.util.*
 
 class ConnectionManager(private val serviceManager: ServiceManager) {
@@ -44,15 +47,34 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
     ): NanoHTTPD.Response {
         val token = parseToken(session)
         return if (validateToken(token) || true) {
-            //println("parseMediaTransferBody: $mUiMessenger")
+            val buffer = Buffer()
+            val out = buffer.outputStream()
+            val input = session.inputStream
+            out.use { out ->
+                val byteArray = ByteArray(1024 * 4)
+                var size = 0
+                while (true) {
+                    size = input.read(byteArray)
+                    if (size < 0) {
+                        break
+                    }
+
+                    out.write(byteArray, 0, size)
+                }
+            }
+            val msg = Msg(TaskInfo::class.qualifiedName ?: "TaskInfo", buffer.readByteArray())
+            val serviceInfo = mClientMap[token]
+            if (serviceInfo != null) {
+                serviceManager.onReceiveMessage(serviceInfo, msg)
+            }
+            /*
             val adapter = mGson.getAdapter(TypeToken.get(TaskInfo::class.java))
             val reader = InputStreamReader(session.inputStream)
             val taskInfo = adapter.fromJson(reader)
             val msg = Message.obtain().apply {
                 what = 100
                 obj = taskInfo
-            }
-            //mUiMessenger?.send(msg)
+            }*/
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
             newSimpleResultDataResponse(RESULT_FAILED, RESULT_MESSAGE_INVALID_TOKEN)
@@ -82,7 +104,7 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
         session: NanoHTTPD.IHTTPSession
     ): NanoHTTPD.Response {
         val token = parseToken(session)
-        return if (validateToken(token) || true) {
+        return if (validateToken(token)) {
             val adapter = mGson.getAdapter(Msg::class.java)
             val reader = InputStreamReader(session.inputStream)
             val msg = adapter.fromJson(reader)

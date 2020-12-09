@@ -63,10 +63,6 @@ class ConnectionActivity: BaseActivity() {
                     override fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int) {
                         Toast.makeText(this@ConnectionActivity, "$serviceInfo 已断开", Toast.LENGTH_LONG).show()
                     }
-
-                    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
-                        println("onMessage: type=$type, data=$data")
-                    }
                 }
 
                 LanLink.getInstance().discoveryListener = object : DiscoveryListener{
