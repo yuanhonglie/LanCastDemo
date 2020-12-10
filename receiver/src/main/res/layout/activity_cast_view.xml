@@ -16,6 +16,7 @@
         android:visibility="gone" />
 
     <RelativeLayout
+        android:id="@+id/backLayout"
         android:layout_width="match_parent"
         android:layout_height="60px"
         android:gravity="center_vertical">

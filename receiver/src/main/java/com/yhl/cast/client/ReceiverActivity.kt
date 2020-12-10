@@ -15,6 +15,7 @@ import android.widget.BaseAdapter
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.yhl.cast.client.data.User
 import com.yhl.lanlink.LanLink.Companion.getInstance
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
@@ -169,6 +170,11 @@ class ReceiverActivity : BaseActivity(), View.OnClickListener, OnItemClickListen
                         startDownload(mediaItem)
                         mAdapter.add(mediaItem)
                     }
+                }
+            }
+            "user-info" -> {
+                if (data is User) {
+                    println("onMessage: $data")
                 }
             }
         }

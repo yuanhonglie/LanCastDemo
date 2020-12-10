@@ -61,6 +61,11 @@ data class TaskInfo(var media: Media, var actionType: ActionType = ActionType.ca
     }*/
 }
 
+/**
+ * 投屏控制消息，control = 1，退出投屏
+ */
+data class ControlInfo(val control: Int)
+
 enum class MediaType(val value: Int) {
     image(0), video(1), stream(2)
 }

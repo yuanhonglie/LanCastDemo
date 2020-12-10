@@ -7,7 +7,7 @@ import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.interfaces.MessageListener
 import com.yhl.lanlink.util.getIPv4Address
 
-abstract class BaseActivity: AppCompatActivity(), MessageListener {
+abstract class BaseActivity() : AppCompatActivity(), MessageListener {
 
     override fun onResume() {
         super.onResume()

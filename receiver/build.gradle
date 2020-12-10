@@ -7,6 +7,10 @@ plugins {
 
 def config = rootProject.ext.android
 def libraries = rootProject.ext.dependencies
+def isCompileProtobuf = rootProject.ext.isCompileProtobuf
+if (isCompileProtobuf) {
+    apply plugin: 'com.google.protobuf'
+}
 
 android {
     compileSdkVersion 29
@@ -21,6 +25,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    sourceSets {
+        main {
+            if (isCompileProtobuf) {
+                proto {
+                    srcDir 'src/main/proto'
+                    include '**/*.proto'
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -33,6 +48,31 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+}
+
+//重新编译proto文件，需要将config.gradle的isCompileProtobuf修改为true
+if (isCompileProtobuf) {
+    protobuf {
+        //这里配置protoc编译器
+        protoc {
+            artifact = 'com.google.protobuf:protoc:3.11.2'
+        }
+        plugins {
+            javalite {
+                // The codegen for lite comes as a separate artifact
+                artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+            }
+        }
+        //这里配置生成目录，rebuild后会在项目gradle同级的目录下的protofile下生成对应的java文件
+        generateProtoTasks {
+            all().each { task ->
+                task.plugins {
+                    javalite {}
+                }
+            }
+        }
+        generatedFilesBaseDir = 'protofile'
     }
 }
 
@@ -68,4 +108,5 @@ dependencies {
 
     implementation libraries.andPermission
     implementation project(":lanlink")
+    implementation libraries.protobuf_lite
 }

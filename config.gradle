@@ -1,5 +1,5 @@
 ext {
-
+    isCompileProtobuf = false
     android = [
             compileSdkVersion: 28,
             buildToolsVersion: '28.0.3',
@@ -35,6 +35,7 @@ ext {
             commonLogVersion    : '1.0.2',
             okdownloadVersion   : '1.0.5',
             cardview            : '27.1.1',
+            protobufLiteVersion : '3.0.1',
     ]
 
     dependencies = [
@@ -111,7 +112,8 @@ ext {
             "okdownload_okhttp"          : "com.liulishuo.okdownload:okhttp:${version["okdownloadVersion"]}",
             "okdownload_okdownload"      : "com.liulishuo.okdownload:okdownload:${version["okdownloadVersion"]}",
             "okdownload_sqlite"          : "com.liulishuo.okdownload:sqlite:${version["okdownloadVersion"]}",
-            "cardview"                   : "com.android.support:cardview-v7:${version["cardview"]}"
+            "cardview"                   : "com.android.support:cardview-v7:${version["cardview"]}",
+            "protobuf_lite"              : "com.google.protobuf:protobuf-lite:${version["protobufLiteVersion"]}"
     ]
 
 }

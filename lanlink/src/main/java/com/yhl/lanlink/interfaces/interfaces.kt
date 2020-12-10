@@ -92,6 +92,8 @@ interface ILanLink {
 
     fun sendCastExit(serviceInfo: ServiceInfo)
 
+    fun sendMessage(serviceInfo: ServiceInfo, msg: Any, tag: String?)
+
     fun sendMessage(serviceInfo: ServiceInfo, msg: Any)
 
     fun destroy()

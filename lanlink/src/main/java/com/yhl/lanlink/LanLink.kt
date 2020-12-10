@@ -6,7 +6,9 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
 import com.yhl.lanlink.data.ActionType
+import com.yhl.lanlink.data.ControlInfoCodec
 import com.yhl.lanlink.data.MediaType
+import com.yhl.lanlink.data.TaskInfoCodec
 import com.yhl.lanlink.interfaces.*
 import com.yhl.lanlink.server.HttpService
 
@@ -44,10 +46,8 @@ class LanLink: ILanLink {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                 val service = ILanLinkService.Stub.asInterface(binder)
                 service?.let {
-                    onInitialized()
+                    onInitialized(it)
                 }
-                this@LanLink.service = service
-
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
@@ -56,15 +56,16 @@ class LanLink: ILanLink {
         }
         val intent = Intent(context, HttpService::class.java)
         context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        registerMessageCodec(TaskInfoCodec())
+        registerMessageCodec(ControlInfoCodec())
     }
 
-    private fun onInitialized() {
+    private fun onInitialized(service: ILanLinkService) {
         println("onInitialized: ")
-        service?.let {
-            it.setRegistrationListener(IRegistrationListenerImpl(this))
-            it.setDiscoveryListener(IDiscoveryListenerImpl(this))
-            it.setConnectionListener(IConnectionListenerImpl(this))
-        }
+        this.service = service
+        service.setRegistrationListener(IRegistrationListenerImpl(this))
+        service.setDiscoveryListener(IDiscoveryListenerImpl(this))
+        service.setConnectionListener(IConnectionListenerImpl(this))
         initializeListener?.onInitialized()
         isInitialized = true
     }
@@ -116,12 +117,16 @@ class LanLink: ILanLink {
         service?.sendCastExit(serviceInfo.id)
     }
 
-    override fun sendMessage(serviceInfo: ServiceInfo, msg: Any) {
-        val tag = msg::class.qualifiedName
-        val codec = messageCodecs[tag]
+    override fun sendMessage(serviceInfo: ServiceInfo, msg: Any, tag: String?) {
+        val type = tag ?: msg::class.qualifiedName
+        val codec = messageCodecs[type]
         if (codec != null) {
             service?.send(serviceInfo.id, codec.encodeInner(msg))
         }
+    }
+
+    override fun sendMessage(serviceInfo: ServiceInfo, msg: Any) {
+        sendMessage(serviceInfo, msg, null)
     }
 
     fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
@@ -130,7 +135,7 @@ class LanLink: ILanLink {
         }
     }
 
-    private fun runOnUiThread(r: () -> Unit) {
+    fun runOnUiThread(r: () -> Unit) {
         uiHandler.post(r)
     }
 

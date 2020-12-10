@@ -2,16 +2,12 @@ package com.yhl.cast.client
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Message
 import android.text.TextUtils
 import android.view.View
 import com.bumptech.glide.Glide
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
-import com.yhl.lanlink.data.ActionType
-import com.yhl.lanlink.data.Media
-import com.yhl.lanlink.data.MediaType
-import com.yhl.lanlink.data.TaskInfo
+import com.yhl.lanlink.data.*
 import kotlinx.android.synthetic.main.activity_cast_view.*
 
 const val KEY_MEDIA_INFO = "media"
@@ -23,7 +19,7 @@ class CastViewActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cast_view)
-        ivBack.setOnClickListener {
+        backLayout.setOnClickListener {
             onBackPressed()
         }
         initData(intent)
@@ -86,6 +82,13 @@ class CastViewActivity : BaseActivity() {
                 if (data is TaskInfo) {
                     if (data.actionType == ActionType.cast) {
                         playMedia(data.media)
+                    }
+                }
+            }
+            ControlInfo::class.qualifiedName -> {
+                if (data is ControlInfo) {
+                    if (data.control == 1) {
+                        onBackPressed()
                     }
                 }
             }

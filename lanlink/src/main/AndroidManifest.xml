@@ -17,7 +17,8 @@
 
     <application
         android:usesCleartextTraffic="true">
-        <service android:name="com.yhl.lanlink.server.HttpService"/>
+        <service android:name="com.yhl.lanlink.server.HttpService"
+            android:process=":link"/>
     </application>
 
 </manifest>

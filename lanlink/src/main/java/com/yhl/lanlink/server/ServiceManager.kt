@@ -1,4 +1,4 @@
-package com.yhl.lanlink.nsd
+package com.yhl.lanlink.server
 
 import android.content.Context
 import android.net.nsd.NsdManager
@@ -8,7 +8,6 @@ import com.yhl.lanlink.*
 import com.yhl.lanlink.channel.Channel
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
-import com.yhl.lanlink.server.ConnectionManager
 
 class ServiceManager private constructor(context: Context): ILanLinkService.Stub() {
     private val TAG = ServiceManager::class.simpleName
@@ -33,7 +32,11 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
     init {
         mWorkerThread = initWorkerThread()
         mWorkerThread.start()
-        mWorkerHandler = WorkerHandler(this, mWorkerThread.looper)
+        mWorkerHandler = WorkerHandler(
+            this,
+            mWorkerThread.looper
+        )
+        println("ServiceManager::init()")
     }
 
     private fun initWorkerThread() = HandlerThread("service-manager")
@@ -196,6 +199,7 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
 
     override fun send(serviceId: String?, msg: Msg?) {
         val serviceInfo = serviceMap[serviceId]
+        println("send: $serviceInfo, $msg")
         if (msg != null) {
             serviceInfo?.sendMessage(msg)
         }
@@ -210,10 +214,12 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
     }
 
     private fun runOnUiThread(r: () -> Unit) {
-        mUiHandler.post(r)
+        //mUiHandler.post(r)
+        r.invoke()
     }
 
     override fun destroy() {
+        println("ServiceManager::destroy()")
         mConnectionManager.destroy()
         serviceMap.clear()
         mRegistrationListener = null
@@ -345,7 +351,8 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
             if (instance == null) {
                 synchronized(ServiceManager::class) {
                     if (instance == null) {
-                        instance = ServiceManager(c)
+                        instance =
+                            ServiceManager(c)
                     }
                 }
             }

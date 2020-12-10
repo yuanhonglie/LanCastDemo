@@ -27,10 +27,12 @@ import com.yhl.cast.server.albumpicker.data.MediaReader;
 import com.yhl.cast.server.albumpicker.model.AlbumFile;
 import com.yhl.cast.server.albumpicker.model.AlbumFolder;
 import com.yhl.cast.server.albumpicker.widget.photoview.ItemDivider;
+import com.yhl.cast.server.data.User;
 import com.yhl.lanlink.LanLink;
 import com.yhl.lanlink.ServiceInfo;
 import com.yhl.lanlink.base.BaseActivity;
 import com.yhl.lanlink.data.ActionType;
+import com.yhl.lanlink.data.ControlInfo;
 import com.yhl.lanlink.data.Media;
 import com.yhl.lanlink.data.MediaType;
 import com.yhl.lanlink.data.PlayMode;
@@ -184,11 +186,22 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
         } else if (R.id.btn_transfer == view.getId()) {
             AlbumFolder folder = mMediaType == AlbumFile.TYPE_IMAGE ? mAlbumFolder : mVideoFolder;
             AlbumFile albumFile = folder.getAlbumFiles().get(mAdapter.getSelectedItem());
-            LanLink.Companion.getInstance().sendCastExit(mServiceInfo);
+            LanLink.Companion.getInstance().sendMessage(mServiceInfo, new ControlInfo(1));
+            LanLink.Companion.getInstance().sendMessage(mServiceInfo, getUser(), "user-info");
             startPlayMedia(albumFile, ActionType.store);
         } else if (R.id.ivBack == view.getId()) {
             onBackPressed();
         }
+    }
+
+    private User getUser() {
+        User user = new User();
+        user.setName("leo");
+        user.setEmail("xxx@royole.com");
+        user.setPhone("+8615229839374");
+        user.setAge(18);
+        user.setSex(1);
+        return user;
     }
 
     /**
@@ -347,9 +360,8 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
                 break;
         }
         String name = new File(url).getName();
-        Media media = new Media(url, type, name);
+        Media media = new Media(getFileServerUrl() + url, type, name);
         TaskInfo taskInfo = new TaskInfo(media, actionType, PlayMode.single, "test-album-name");
-        //LanLink.Companion.getInstance().sendCastTask(mServiceInfo, getFileServerUrl() + url, type, actionType);
         LanLink.Companion.getInstance().sendMessage(mServiceInfo, taskInfo);
     }
 

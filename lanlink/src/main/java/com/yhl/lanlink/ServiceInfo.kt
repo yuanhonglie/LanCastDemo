@@ -99,6 +99,7 @@ fun ServiceInfo.sendCastExit() {
 }
 
 fun ServiceInfo.sendMessage(msg: Msg) {
+    println("sendMessage: $channel, $msg")
     channel?.sendMessage(msg)
 }
 

@@ -9,7 +9,7 @@ import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.TaskInfo
 import com.yhl.lanlink.http.HttpClient
 import com.yhl.lanlink.http.MediaServerApi
-import com.yhl.lanlink.nsd.ServiceManager
+import com.yhl.lanlink.server.ServiceManager
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -241,6 +241,7 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
     private fun requestSendMessage(msg: Msg) {
         try {
             val token = mToken
+            println("requestSendMessage: token = $token")
             if (token != null) {
                 val call = mApi.requestSendMessage(token, msg)
                 val response = call.execute()

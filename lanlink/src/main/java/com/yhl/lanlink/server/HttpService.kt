@@ -4,7 +4,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import com.yhl.lanlink.nsd.ServiceManager
 import fi.iki.elonen.NanoHTTPD
 
 val TAG = HttpService::class.simpleName

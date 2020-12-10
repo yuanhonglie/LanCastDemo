@@ -1,20 +1,17 @@
 package com.yhl.lanlink.server
 
 import android.os.Message
-import android.os.Messenger
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.yhl.lanlink.*
 import com.yhl.lanlink.data.ResultData
 import com.yhl.lanlink.data.TaskInfo
-import com.yhl.lanlink.nsd.ServiceManager
 import fi.iki.elonen.NanoHTTPD
 import okio.Buffer
-import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
+import java.nio.charset.Charset
 import java.util.*
 
 class ConnectionManager(private val serviceManager: ServiceManager) {
@@ -47,40 +44,30 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
     ): NanoHTTPD.Response {
         val token = parseToken(session)
         return if (validateToken(token) || true) {
-            val buffer = Buffer()
-            val out = buffer.outputStream()
-            val input = session.inputStream
-            out.use { out ->
-                val byteArray = ByteArray(1024 * 4)
-                var size = 0
-                while (true) {
-                    size = input.read(byteArray)
-                    if (size < 0) {
-                        break
-                    }
 
-                    out.write(byteArray, 0, size)
-                }
+            val adapter = mGson.getAdapter(TaskInfo::class.java)
+            val reader = InputStreamReader(session.inputStream)
+            val value = adapter.fromJson(reader)
+
+            val buffer = Buffer()
+            val writer = OutputStreamWriter(buffer.outputStream(), Charset.forName("UTF-8"))
+            writer.use {
+                val jsonWriter = mGson.newJsonWriter(writer)
+                adapter.write(jsonWriter, value)
+                jsonWriter.close()
             }
+
             val msg = Msg(TaskInfo::class.qualifiedName ?: "TaskInfo", buffer.readByteArray())
             val serviceInfo = mClientMap[token]
             if (serviceInfo != null) {
                 serviceManager.onReceiveMessage(serviceInfo, msg)
             }
-            /*
-            val adapter = mGson.getAdapter(TypeToken.get(TaskInfo::class.java))
-            val reader = InputStreamReader(session.inputStream)
-            val taskInfo = adapter.fromJson(reader)
-            val msg = Message.obtain().apply {
-                what = 100
-                obj = taskInfo
-            }*/
+
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
             newSimpleResultDataResponse(RESULT_FAILED, RESULT_MESSAGE_INVALID_TOKEN)
         }
     }
-
 
     fun parseMediaCastExitBody(
         httpServer: HttpServer,

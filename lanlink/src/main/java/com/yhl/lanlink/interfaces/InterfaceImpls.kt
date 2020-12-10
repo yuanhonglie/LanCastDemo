@@ -4,36 +4,50 @@ import com.yhl.lanlink.*
 
 class IDiscoveryListenerImpl(private val lanLink: LanLink) : IDiscoveryListener.Stub() {
     override fun onServiceFound(serviceInfo: ServiceInfo) {
-        lanLink.discoveryListener?.onServiceFound(serviceInfo)
+        lanLink.runOnUiThread {
+            lanLink.discoveryListener?.onServiceFound(serviceInfo)
+        }
     }
 
     override fun onDiscoveryStop(resultCode: Int) {
-        lanLink.discoveryListener?.onDiscoveryStop(resultCode)
+        lanLink.runOnUiThread {
+            lanLink.discoveryListener?.onDiscoveryStop(resultCode)
+        }
     }
 
     override fun onServiceLost(serviceInfo: ServiceInfo) {
-        lanLink.discoveryListener?.onServiceLost(serviceInfo)
+        lanLink.runOnUiThread {
+            lanLink.discoveryListener?.onServiceLost(serviceInfo)
+        }
     }
 
     override fun onDiscoveryStart(resultCode: Int) {
-        lanLink.discoveryListener?.onDiscoveryStart(resultCode)
+        lanLink.runOnUiThread {
+            lanLink.discoveryListener?.onDiscoveryStart(resultCode)
+        }
     }
 }
 
 class IRegistrationListenerImpl(private val lanLink: LanLink) :
     IRegistrationListener.Stub() {
     override fun onServiceUnregistered(resultCode: Int) {
-        lanLink.registrationListener?.onServiceUnregistered(resultCode)
+        lanLink.runOnUiThread {
+            lanLink.registrationListener?.onServiceUnregistered(resultCode)
+        }
     }
 
     override fun onServiceRegistered(resultCode: Int) {
-        lanLink.registrationListener?.onServiceRegistered(resultCode)
+        lanLink.runOnUiThread {
+            lanLink.registrationListener?.onServiceRegistered(resultCode)
+        }
     }
 }
 
 class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListener.Stub() {
     override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
-        lanLink.connectionListener?.onConnect(serviceInfo, resultCode)
+        lanLink.runOnUiThread {
+            lanLink.connectionListener?.onConnect(serviceInfo, resultCode)
+        }
     }
 
     override fun onMessage(serviceInfo: ServiceInfo, msg: Msg?) {
@@ -43,12 +57,16 @@ class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListene
             val codec = lanLink.messageCodecs[msg.tag]
             if (codec != null && lanLink.messageListener != null) {
                 val data = codec.decodeInner(msg)
-                lanLink.onMessage(serviceInfo, msg.tag, data)
+                lanLink.runOnUiThread {
+                    lanLink.messageListener?.onMessage(serviceInfo, msg.tag, data)
+                }
             }
         }
     }
 
     override fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int) {
-        lanLink.connectionListener?.onDisconnect(serviceInfo, resultCode)
+        lanLink.runOnUiThread {
+            lanLink.connectionListener?.onDisconnect(serviceInfo, resultCode)
+        }
     }
 }
