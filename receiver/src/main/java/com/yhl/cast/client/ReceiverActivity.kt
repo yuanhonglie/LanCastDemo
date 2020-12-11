@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Message
 import android.os.Process
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -16,7 +15,7 @@ import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.yhl.cast.client.data.User
-import com.yhl.lanlink.LanLink.Companion.getInstance
+import com.yhl.lanlink.LanLinkReceiver
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.ActionType
@@ -37,7 +36,7 @@ import java.util.concurrent.TimeUnit
 private const val STATUS_DOWNLOADING = 1
 private const val STATUS_DOWNLOADED = 2
 
-class ReceiverActivity : BaseActivity(), View.OnClickListener, OnItemClickListener, DownloadProgressListener {
+class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressListener {
     private var mDeviceName: String? = null
     private lateinit var mAdapter: MediaAdapter
     private lateinit var mDownloader: Downloader
@@ -53,26 +52,20 @@ class ReceiverActivity : BaseActivity(), View.OnClickListener, OnItemClickListen
 
     private fun initCastServer() {}
     private fun initView() {
-        ivBack.setOnClickListener { this }
-        btnStop.setOnClickListener { this }
-        btnStart.setOnClickListener(this)
+        ivBack.setOnClickListener {
+            onBackPressed()
+        }
+        btnStop.setOnClickListener {
+            stopService()
+        }
+        btnStart.setOnClickListener {
+            btnStart.isSelected = true
+            startService()
+        }
 
         mAdapter = MediaAdapter(this)
         mAdapter.onItemClickListener = this
         lvMedia.adapter = mAdapter
-    }
-
-    override fun onClick(v: View) {
-        when (v.id) {
-            R.id.btnStart -> {
-                btnStart.isSelected = true
-                startService()
-            }
-            R.id.btnStop -> stopService()
-            R.id.ivBack -> onBackPressed()
-            else -> {
-            }
-        }
     }
 
     private val deviceName: String?
@@ -93,11 +86,11 @@ class ReceiverActivity : BaseActivity(), View.OnClickListener, OnItemClickListen
         }
 
     private fun startService() {
-        getInstance().registerService(deviceName!!)
+        LanLinkReceiver.getInstance().registerService(deviceName!!)
     }
 
     private fun stopService() {
-        getInstance().unregisterService()
+        LanLinkReceiver.getInstance().unregisterService()
     }
 
     private fun checkPermission() {

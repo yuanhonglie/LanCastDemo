@@ -1,7 +1,10 @@
 package com.yhl.lanlink.interfaces
 
-import android.os.Messenger
-import com.yhl.lanlink.*
+import android.net.Uri
+import com.yhl.lanlink.Msg
+import com.yhl.lanlink.RESULT_FAILED
+import com.yhl.lanlink.RESULT_SUCCESS
+import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 
@@ -69,12 +72,41 @@ interface MessageListener {
     fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any)
 }
 
+interface InitializeListener {
+    /**
+     * SDK初始化成功
+     */
+    fun onInitialized()
+}
 
-interface ILanLink {
+interface ILinkReceiver {
+
+    fun isInitialized(): Boolean
+
+    fun setInitializeListener(listener: InitializeListener?)
+
+    fun setRegistrationListener(listener: RegistrationListener?)
+
+    fun setMessageListener(listener: MessageListener?)
 
     fun registerService(name: String)
 
     fun unregisterService()
+
+    fun registerMessageCodec(codec: MessageCodec)
+}
+
+interface ILinkSender {
+
+    fun isInitialized(): Boolean
+
+    fun setInitializeListener(listener: InitializeListener?)
+
+    fun setDiscoveryListener(listener: DiscoveryListener?)
+
+    fun setConnectionListener(listener: ConnectionListener?)
+
+    fun setMessageListener(listener: MessageListener?)
 
     fun startDiscovery()
 
@@ -83,8 +115,6 @@ interface ILanLink {
     fun connect(serviceInfo: ServiceInfo)
 
     fun disconnect(serviceInfo: ServiceInfo)
-
-    fun setClientMessenger(messenger: Messenger)
 
     fun registerMessageCodec(codec: MessageCodec)
 
@@ -96,7 +126,9 @@ interface ILanLink {
 
     fun sendMessage(serviceInfo: ServiceInfo, msg: Any)
 
-    fun destroy()
+    fun serveFile(path: String?): String
+
+    fun serveFile(uri: Uri?): String
 }
 
 abstract class MessageCodec {

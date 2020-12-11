@@ -19,10 +19,10 @@ public class UserCodec extends MessageCodec {
     @NotNull
     @Override
     public byte[] encode(@NotNull Object msg) {
-        if (msg instanceof User) {
-            User user = (User) msg;
+        if (msg instanceof UserInfo) {
+            UserInfo userInfo = (UserInfo) msg;
             UserProto.User.Builder builder = UserProto.User.newBuilder();
-            builder.setAge(user.getAge()).setEmail(user.getEmail()).setName(user.getName()).setPhone(user.getPhone()).setSex(user.getSex());
+            builder.setAge(userInfo.getAge()).setEmail(userInfo.getEmail()).setName(userInfo.getName()).setPhone(userInfo.getPhone()).setSex(userInfo.getSex());
             UserProto.User userProto = builder.build();
             return userProto.toByteArray();
         }
@@ -31,16 +31,16 @@ public class UserCodec extends MessageCodec {
 
     @NotNull
     @Override
-    public User decode(@NotNull byte[] data) {
+    public UserInfo decode(@NotNull byte[] data) {
         try {
             UserProto.User userProto = UserProto.User.getDefaultInstance().getParserForType().parseFrom(data);
-            User user = new User();
-            user.setName(userProto.getName());
-            user.setEmail(userProto.getEmail());
-            user.setPhone(userProto.getPhone());
-            user.setAge(userProto.getAge());
-            user.setSex(userProto.getSex());
-            return user;
+            UserInfo userInfo = new UserInfo();
+            userInfo.setName(userProto.getName());
+            userInfo.setEmail(userProto.getEmail());
+            userInfo.setPhone(userProto.getPhone());
+            userInfo.setAge(userProto.getAge());
+            userInfo.setSex(userProto.getSex());
+            return userInfo;
         } catch (InvalidProtocolBufferException e) {
             Log.i("UserCodec1", "decode: error = " + e.getMessage());
         }

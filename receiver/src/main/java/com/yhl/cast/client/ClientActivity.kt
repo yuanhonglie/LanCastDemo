@@ -1,31 +1,22 @@
 package com.yhl.cast.client
 
-import android.content.Intent
 import android.os.Bundle
-import android.os.IBinder
-import android.os.Message
 import android.util.Log
 import android.view.View
 import com.bumptech.glide.Glide
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import com.yhl.lanlink.LINK_SERVICE_RECEIVER
-import com.yhl.lanlink.LanLink
+import com.yhl.lanlink.LanLinkReceiver
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.Media
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.TaskInfo
-import com.yhl.lanlink.http.HttpClient
 import com.yhl.lanlink.interfaces.RegistrationListener
 import com.yhl.lanlink.util.getIPv4Address
-import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_client.*
-import okhttp3.Request
 
 
 class ClientActivity : BaseActivity(), RegistrationListener {
@@ -49,21 +40,6 @@ class ClientActivity : BaseActivity(), RegistrationListener {
             requestMessageServer()
         }
 
-        btnRequestImage.setOnClickListener {
-            ivImage.visibility = View.VISIBLE
-            vvVideo.visibility = View.GONE
-            Glide.with(this).load(getImageUrl()).into(ivImage)
-        }
-
-        btnRequestVideo.setOnClickListener {
-            stopVideo()
-            vvVideo.visibility = View.VISIBLE
-            ivImage.visibility = View.GONE
-            vvVideo.setVideoPath(getVideoUrl())
-            vvVideo.setOnCompletionListener { vvVideo.start() }
-            vvVideo.start()
-        }
-
         AndPermission.with(this)
             .runtime()
             .permission(Permission.Group.STORAGE)
@@ -74,13 +50,13 @@ class ClientActivity : BaseActivity(), RegistrationListener {
     }
 
     private fun startServiceBroadcast() {
-        val mLanLink = LanLink.getInstance()
-        mLanLink.registrationListener = this
-        mLanLink.registerService("${LINK_SERVICE_RECEIVER}#1")
+        val server = LanLinkReceiver.getInstance()
+        server.setRegistrationListener(this)
+        server.registerService("${LINK_SERVICE_RECEIVER}#1")
     }
 
     private fun stopServiceBroadcast() {
-        LanLink.getInstance().unregisterService()
+        LanLinkReceiver.getInstance().unregisterService()
     }
 
     override fun finish() {

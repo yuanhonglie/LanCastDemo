@@ -197,7 +197,7 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
 
     @WorkerThread
     private fun requestCastTask(uri: String, type: MediaType, action: ActionType) {
-        val media = Media(uri,type)
+        val media = Media(uri, type)
         media.name = File(uri).name
         val taskInfo = TaskInfo(media, action)
 
@@ -209,6 +209,7 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
                 val result = response.body()
                 println("requestCastTask: result = $result")
                 if (result != null && result.errorCode == RESULT_SUCCESS) {
+
                 }
             } else {
                 println("requestCastTask: invalid token")
@@ -228,6 +229,7 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
                 val result = response.body()
                 println("requestCastTask: result = $result")
                 if (result != null && result.errorCode == RESULT_SUCCESS) {
+
                 }
             } else {
                 println("requestCastTask: invalid token")
@@ -248,6 +250,7 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
                 val result = response.body()
                 println("requestSendMessage: result = $result")
                 if (result != null && result.errorCode == RESULT_SUCCESS) {
+
                 }
             } else {
                 println("requestSendMessage: invalid token")

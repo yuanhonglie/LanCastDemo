@@ -3,32 +3,34 @@ package com.yhl.cast.server
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
-import android.os.IBinder
 import android.widget.Toast
-import com.yhl.lanlink.*
+import com.yhl.lanlink.LanLinkSender
+import com.yhl.lanlink.RESULT_SUCCESS
+import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.interfaces.ConnectionListener
 import com.yhl.lanlink.interfaces.DiscoveryListener
+import com.yhl.lanlink.isConnected
 import kotlinx.android.synthetic.main.activity_server.*
 
 
 class ServerActivity : BaseActivity(), DiscoveryListener {
     private var mServiceInfo: ServiceInfo? = null
     private var mUiHandler = Handler()
-    private lateinit var mLanLink: LanLink
+    private lateinit var mLanLink: LanLinkSender
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_server)
 
         btnSendImage.setOnClickListener {
-            sendCastTask(getFileServerUrl() + getImageUri(), MediaType.image)
+            sendCastTask(getImageUri(), MediaType.image)
         }
 
         btnSendVideo.setOnClickListener {
-            sendCastTask(getFileServerUrl() + getVideoUri(), MediaType.video)
+            sendCastTask(getVideoUri(), MediaType.video)
         }
 
         btnDiscover.setOnClickListener {
@@ -48,8 +50,8 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
             val serviceInfo = mServiceInfo
             disconnectService(serviceInfo)
         }
-        mLanLink = LanLink.getInstance()
-        mLanLink.connectionListener = object : ConnectionListener {
+        mLanLink = LanLinkSender.getInstance()
+        mLanLink.setConnectionListener(object : ConnectionListener {
             override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
                 println("onConnect: $serviceInfo resultCode = $resultCode")
                 if (resultCode == RESULT_SUCCESS) {
@@ -63,14 +65,14 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
                 println("onDisconnect: $serviceInfo resultCode = $resultCode")
                 toast("断开接收端${serviceInfo.name}, $resultCode")
             }
-        }
+        })
     }
 
     private fun sendCastTask(uri: String, type: MediaType) {
         val serviceInfo = mServiceInfo
         if (serviceInfo != null) {
             println("sendCastTask isConnected = ${serviceInfo.isConnected()}")
-            LanLink.getInstance().sendCastTask(serviceInfo, uri, type, ActionType.cast)
+            LanLinkSender.getInstance().sendCastTask(serviceInfo, uri, type, ActionType.cast)
         } else {
             toast("请先连接接收端！")
         }
@@ -89,12 +91,12 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
     }
 
     private fun startServiceDiscover() {
-        LanLink.getInstance().discoveryListener = this
-        LanLink.getInstance().startDiscovery()
+        LanLinkSender.getInstance().setDiscoveryListener(this)
+        LanLinkSender.getInstance().startDiscovery()
     }
 
     private fun stopServiceDiscover() {
-        LanLink.getInstance().stopDiscovery()
+        LanLinkSender.getInstance().stopDiscovery()
         mServiceInfo = null
     }
 

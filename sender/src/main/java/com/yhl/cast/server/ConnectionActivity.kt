@@ -13,12 +13,12 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
 import android.widget.Toast
-import com.yhl.lanlink.InitializeListener
-import com.yhl.lanlink.LanLink
+import com.yhl.lanlink.LanLinkSender
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.interfaces.ConnectionListener
 import com.yhl.lanlink.interfaces.DiscoveryListener
+import com.yhl.lanlink.interfaces.InitializeListener
 import kotlinx.android.synthetic.main.activity_connection.*
 import kotlinx.android.synthetic.main.layout_lv_footer.*
 import kotlinx.android.synthetic.main.layout_lv_header.*
@@ -31,7 +31,7 @@ private const val MSG_CONNECT_FAILURE = 101
 private const val MSG_CONNECT_SUCCESS = 104
 private const val MSG_DISCONNECT = 103
 
-class ConnectionActivity: BaseActivity() {
+class ConnectionActivity : BaseActivity() {
 
     lateinit var adapter: DeviceAdapter
     lateinit var mUiHandler: UIHandler
@@ -44,49 +44,58 @@ class ConnectionActivity: BaseActivity() {
         setContentView(R.layout.activity_connection)
         initView()
         initLanlink()
-        ivBack.setOnClickListener{ onBackPressed() }
+        ivBack.setOnClickListener { onBackPressed() }
         tvVersion.setText("Demo V1.0")
     }
 
     private fun initLanlink() {
         mUiHandler = UIHandler()
+
         //sdk初始化
+        LanLinkSender.getInstance().setConnectionListener(object : ConnectionListener {
+            override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
+                Toast.makeText(
+                    this@ConnectionActivity,
+                    "已连接 $serviceInfo",
+                    Toast.LENGTH_LONG
+                ).show()
+                onServiceConnected(serviceInfo)
+            }
 
-        LanLink.getInstance().initializeListener = object : InitializeListener {
+            override fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int) {
+                Toast.makeText(
+                    this@ConnectionActivity,
+                    "$serviceInfo 已断开",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        })
+
+        LanLinkSender.getInstance().setDiscoveryListener(object : DiscoveryListener {
+            override fun onDiscoveryStart(resultCode: Int) {
+                Toast.makeText(this@ConnectionActivity, "开始扫描服务", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onDiscoveryStop(resultCode: Int) {
+                Toast.makeText(this@ConnectionActivity, "停止扫描服务", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onServiceFound(serviceInfo: ServiceInfo) {
+                println("onServiceFound: $serviceInfo")
+                onServiceDiscover(serviceInfo)
+            }
+
+            override fun onServiceLost(serviceInfo: ServiceInfo) {
+                adapter.remove(serviceInfo)
+            }
+        })
+
+        LanLinkSender.getInstance().setInitializeListener(object : InitializeListener {
             override fun onInitialized() {
-                LanLink.getInstance().connectionListener = object : ConnectionListener {
-                    override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
-                        Toast.makeText(this@ConnectionActivity, "已连接 $serviceInfo", Toast.LENGTH_LONG).show()
-                        onServiceConnected(serviceInfo)
-                    }
-
-                    override fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int) {
-                        Toast.makeText(this@ConnectionActivity, "$serviceInfo 已断开", Toast.LENGTH_LONG).show()
-                    }
-                }
-
-                LanLink.getInstance().discoveryListener = object : DiscoveryListener{
-                    override fun onDiscoveryStart(resultCode: Int) {
-                        Toast.makeText(this@ConnectionActivity, "开始扫描服务", Toast.LENGTH_LONG).show()
-                    }
-
-                    override fun onDiscoveryStop(resultCode: Int) {
-                        Toast.makeText(this@ConnectionActivity, "停止扫描服务", Toast.LENGTH_LONG).show()
-                    }
-
-                    override fun onServiceFound(serviceInfo: ServiceInfo) {
-                        onServiceDiscover(serviceInfo)
-                    }
-
-                    override fun onServiceLost(serviceInfo: ServiceInfo) {
-                        adapter.remove(serviceInfo)
-                    }
-                }
-
-                LanLink.getInstance().startDiscovery()
+                LanLinkSender.getInstance().startDiscovery()
                 isSearching = true
             }
-        }
+        })
     }
 
     private fun initView() {
@@ -97,14 +106,14 @@ class ConnectionActivity: BaseActivity() {
                 } else {
                     val serviceInfo = adapter.getSelectedDevice()
                     if (serviceInfo != null) {
-                        LanLink.getInstance().disconnect(serviceInfo)
-                        LanLink.getInstance().connect(serviceInfo)
+                        LanLinkSender.getInstance().disconnect(serviceInfo)
+                        LanLinkSender.getInstance().connect(serviceInfo)
                     }
                 }
             } else {
                 val serviceInfo = adapter.getSelectedDevice()
                 if (serviceInfo != null) {
-                    LanLink.getInstance().connect(serviceInfo)
+                    LanLinkSender.getInstance().connect(serviceInfo)
                 }
             }
         }
@@ -112,14 +121,14 @@ class ConnectionActivity: BaseActivity() {
         button2.setOnClickListener {
             val serviceInfo = mSelectInfo
             if (serviceInfo != null) {
-                LanLink.getInstance().disconnect(serviceInfo)
+                LanLinkSender.getInstance().disconnect(serviceInfo)
                 isConnected = false
             }
         }
 
         //button2.visibility = View.INVISIBLE
         adapter = DeviceAdapter(this)
-        adapter.onItemClickListener = object: OnItemClickListener {
+        adapter.onItemClickListener = object : OnItemClickListener {
             override fun onClick(position: Int, data: String) {
                 updateButtonState(data)
             }
@@ -142,15 +151,15 @@ class ConnectionActivity: BaseActivity() {
         //updateButtonState(adapter.selected)
         refreshDeviceList()
         Log.i(TAG, "onResume: ")
-        if (LanLink.getInstance().isInitialized) {
-            LanLink.getInstance().startDiscovery()
+        if (LanLinkSender.getInstance().isInitialized()) {
+            LanLinkSender.getInstance().startDiscovery()
             isSearching = true
         }
     }
 
     override fun onPause() {
         super.onPause()
-        LanLink.getInstance().stopDiscovery()
+        LanLinkSender.getInstance().stopDiscovery()
         isSearching = false
     }
 
@@ -169,11 +178,11 @@ class ConnectionActivity: BaseActivity() {
     }
 
     private fun startAlbumPickActivity() {
-            Log.i(TAG, "startAlbumPickActivity: service = " + mSelectInfo?.name)
-            val intent = Intent()
-            intent.setClass(this, AlbumPickActivity::class.java)
-            intent.putExtra(SERVICE_INFO, mSelectInfo)
-            startActivity(intent)
+        Log.i(TAG, "startAlbumPickActivity: service = " + mSelectInfo?.name)
+        val intent = Intent()
+        intent.setClass(this, AlbumPickActivity::class.java)
+        intent.putExtra(SERVICE_INFO, mSelectInfo)
+        startActivity(intent)
     }
 
 
@@ -188,12 +197,17 @@ class ConnectionActivity: BaseActivity() {
                 }
                 MSG_CONNECT_FAILURE -> if (msg.obj != null) {
                     btnConnect.isEnabled = true
-                    Toast.makeText(this@ConnectionActivity, msg.obj.toString(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ConnectionActivity, msg.obj.toString(), Toast.LENGTH_SHORT)
+                        .show()
                 }
                 MSG_DISCONNECT -> if (msg.obj != null) {
                     val serviceInfo = msg.obj as ServiceInfo
                     this@ConnectionActivity.onServiceDisconnected(serviceInfo)
-                    Toast.makeText(this@ConnectionActivity, serviceInfo.name + "连接断开", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ConnectionActivity,
+                        serviceInfo.name + "连接断开",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
             super.handleMessage(msg)
@@ -204,7 +218,7 @@ class ConnectionActivity: BaseActivity() {
         //val type = if (msg.arg1 == IConnectListener.TYPE_LELINK) "Lelink" else if (msg.arg1 == IConnectListener.TYPE_DLNA) "DLNA" else if (msg.arg1 == IConnectListener.TYPE_NEW_LELINK) "NEW_LELINK" else "IM"
         mSelectInfo = serviceInfo
         isConnected = true
-        Toast.makeText(this,  serviceInfo.name + "连接成功", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, serviceInfo.name + "连接成功", Toast.LENGTH_SHORT).show()
         startCastMediaActivity()
         updateButtonState(adapter.selected)
     }
@@ -233,7 +247,7 @@ class ConnectionActivity: BaseActivity() {
         }
     }
 
-    class DeviceAdapter(val context: Context): BaseAdapter() {
+    class DeviceAdapter(val context: Context) : BaseAdapter() {
 
         var devices = mutableListOf<ServiceInfo>()
         var devMap = mutableMapOf<String, ServiceInfo>()
@@ -318,7 +332,6 @@ class ConnectionActivity: BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         disconnectDevice()
-        LanLink.getInstance().destroy()
         Process.killProcess(Process.myPid())
         System.exit(0)
     }
@@ -326,7 +339,7 @@ class ConnectionActivity: BaseActivity() {
     private fun disconnectDevice() {
         val serviceInfo = mSelectInfo
         if (serviceInfo != null) {
-            LanLink.getInstance().disconnect(serviceInfo)
+            LanLinkSender.getInstance().disconnect(serviceInfo)
             mSelectInfo = null
             isConnected = false
         }

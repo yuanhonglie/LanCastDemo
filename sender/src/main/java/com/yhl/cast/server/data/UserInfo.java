@@ -1,13 +1,13 @@
 package com.yhl.cast.server.data;
 
-public class User {
+public class UserInfo {
     private String name;
     private String email;
     private String phone;
     private int age;
     private int sex;
 
-    public User() {
+    public UserInfo() {
         this.name = name;
     }
 

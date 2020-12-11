@@ -34,5 +34,7 @@ interface ILanLinkService {
 
     void send(String serviceId, inout Msg msg);
 
+    String serveFile(String path);
+
     void destroy();
 }

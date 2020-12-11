@@ -8,13 +8,13 @@ import com.yhl.lanlink.*
 import com.yhl.lanlink.channel.Channel
 import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
+import com.yhl.lanlink.util.getIPv4Address
 
 class ServiceManager private constructor(context: Context): ILanLinkService.Stub() {
     private val TAG = ServiceManager::class.simpleName
     private var mNsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var mWorkerThread: HandlerThread
     private var mWorkerHandler: WorkerHandler
-    private val mUiHandler = MainHandler(Looper.getMainLooper())
     private val serviceMap = mutableMapOf<String, ServiceInfo>()
     private val mChannelMap = mutableMapOf<String, Channel>()
 
@@ -187,7 +187,7 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
         val serviceInfo = serviceMap[serviceId]
         println("sendCastTask: serviceInfo=$serviceInfo uri=$uri mediaType=$mediaType")
         if (uri != null && mediaType != null && actionType != null) {
-            serviceInfo?.sendCastTask(uri, MediaType.valueOf(mediaType), ActionType.valueOf(actionType))
+            serviceInfo?.sendCastTask(serveFile(uri), MediaType.valueOf(mediaType), ActionType.valueOf(actionType))
         }
     }
 
@@ -205,6 +205,10 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
         }
     }
 
+    override fun serveFile(path: String) = "${getFileServerUrl()}/$path"
+
+    private fun getFileServerUrl() = "http://${getIPv4Address()}:$FILE_SERVER_PORT"
+
     fun onReceiveMessage(serviceInfo: ServiceInfo, msg: Msg) {
         mConnectionListener?.onMessage(serviceInfo, msg)
     }
@@ -214,7 +218,6 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
     }
 
     private fun runOnUiThread(r: () -> Unit) {
-        //mUiHandler.post(r)
         r.invoke()
     }
 
