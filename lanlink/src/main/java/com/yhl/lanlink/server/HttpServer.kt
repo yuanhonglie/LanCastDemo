@@ -5,7 +5,7 @@ import com.yhl.lanlink.util.getIPv4Address
 import fi.iki.elonen.NanoHTTPD
 
 
-class HttpServer(var mConnectionManager: ConnectionManager): NanoHTTPD(MESSAGE_SERVER_PORT) {
+class HttpServer(private val mConnectionManager: ConnectionManager): NanoHTTPD(MESSAGE_SERVER_PORT) {
 
     override fun serve(session: IHTTPSession?): Response {
         println("serve: thread = {${Thread.currentThread().name}}")

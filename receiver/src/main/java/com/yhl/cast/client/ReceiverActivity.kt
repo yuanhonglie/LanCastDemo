@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.yhl.cast.client.data.User
 import com.yhl.lanlink.LanLinkReceiver
+import com.yhl.lanlink.RESULT_SUCCESS
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.ActionType
@@ -144,12 +145,17 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
 
     override fun onBackPressed() {
         super.onBackPressed()
+        LanLinkReceiver.getInstance().destroy()
         Process.killProcess(Process.myPid())
         System.exit(0)
     }
 
-    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
-        super.onMessage(serviceInfo, type, data)
+    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
+        super.onMessage(serviceInfo, type, data, resultCode)
+        if (resultCode != RESULT_SUCCESS) {
+            println("onMessage: resultCode=$resultCode")
+            return
+        }
         when (type) {
             TaskInfo::class.qualifiedName -> {
                 if (data is TaskInfo) {

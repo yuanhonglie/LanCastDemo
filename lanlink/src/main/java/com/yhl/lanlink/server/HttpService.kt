@@ -25,13 +25,13 @@ class HttpService: Service() {
         }
 
         if (mFileServer == null) {
-            mFileServer = FileServer()
+            mFileServer = FileServer(serviceManager.mConnectionManager)
             mFileServer!!.start()
         }
         Log.i(TAG, "startServer: 1")
     }
 
-    private fun stopServer() {
+    fun stopServer() {
         Log.i(TAG, "stopServer: ")
         mHttpServer?.stop()
         mHttpServer = null
@@ -46,6 +46,8 @@ class HttpService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        println("onDestroy: ")
         stopServer()
+        ServiceManager.getInstance(this).onDestroy()
     }
 }

@@ -185,7 +185,7 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
         } else if (R.id.btn_transfer == view.getId()) {
             AlbumFolder folder = mMediaType == AlbumFile.TYPE_IMAGE ? mAlbumFolder : mVideoFolder;
             AlbumFile albumFile = folder.getAlbumFiles().get(mAdapter.getSelectedItem());
-            LanLinkSender.Companion.getInstance().sendMessage(mServiceInfo, new ControlInfo(1));
+            LanLinkSender.Companion.getInstance().castExit(mServiceInfo);
             LanLinkSender.Companion.getInstance().sendMessage(mServiceInfo, getUser(), "user-info");
             startPlayMedia(albumFile, ActionType.store);
         } else if (R.id.ivBack == view.getId()) {
@@ -362,7 +362,12 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
         String url = LanLinkSender.Companion.getInstance().serveFile(path);
         Media media = new Media(url, type, name);
         TaskInfo taskInfo = new TaskInfo(media, actionType, PlayMode.single, "test-album-name");
-        LanLinkSender.Companion.getInstance().sendMessage(mServiceInfo, taskInfo);
+        if (ActionType.cast == actionType) {
+            LanLinkSender.Companion.getInstance().castMedia(mServiceInfo, path, type);
+        } else if (ActionType.store == actionType) {
+            LanLinkSender.Companion.getInstance().transferFile(mServiceInfo, path);
+        }
+
     }
 
     private void showShort(@StringRes int resId) {

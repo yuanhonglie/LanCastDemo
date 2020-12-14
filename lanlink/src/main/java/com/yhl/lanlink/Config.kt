@@ -55,6 +55,10 @@ const val MAX_SERVER_HEART_BEAT_LOST = 3
 const val LINK_SERVICE_TYPE = "_lanlink._tcp."
 const val LINK_SERVICE_RECEIVER = "LanLink"
 
+/**
+ * 退出投屏界面
+ */
+const val CONTROL_EXIT_CAST = 1
 
 const val MSG_UI_ACTIVITY_REGISTER = 0
 

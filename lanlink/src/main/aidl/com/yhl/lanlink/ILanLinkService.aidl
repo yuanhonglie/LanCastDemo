@@ -26,12 +26,6 @@ interface ILanLinkService {
 
     void setConnectionListener(IConnectionListener listener);
 
-    void setClientMessenger(in Messenger messenger);
-
-    void sendCastTask(String serviceId, String uri, String mediaType, String actionType);
-
-    void sendCastExit(String serviceId);
-
     void send(String serviceId, inout Msg msg);
 
     String serveFile(String path);

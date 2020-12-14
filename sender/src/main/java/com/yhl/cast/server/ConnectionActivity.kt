@@ -332,6 +332,7 @@ class ConnectionActivity : BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         disconnectDevice()
+        LanLinkSender.getInstance().destroy()
         Process.killProcess(Process.myPid())
         System.exit(0)
     }

@@ -30,26 +30,26 @@ interface DiscoveryListener {
      * @param resultCode {@link RESULT_SUCCESS} ：注册成功，
      *                  <br>{@link RESULT_FAILED} ：注册失败
      */
-    fun onDiscoveryStart(resultCode: Int);
+    fun onDiscoveryStart(resultCode: Int)
 
     /**
      * 停止发现服务事件回调
      * @param resultCode {@link RESULT_SUCCESS} ：注册成功，
      *                  <br>{@link RESULT_FAILED} ：注册失败
      */
-    fun onDiscoveryStop(resultCode: Int);
+    fun onDiscoveryStop(resultCode: Int)
 
     /**
      * 发现服务回调
      * @param serviceInfo 被发现的服务信息，一个{@link ServiceInfo}实例
      */
-    fun onServiceFound(serviceInfo: ServiceInfo);
+    fun onServiceFound(serviceInfo: ServiceInfo)
 
     /**
      * 服务丢失回调
      * @param serviceInfo 丢失的服务信息，一个{@link ServiceInfo}实例
      */
-    fun onServiceLost(serviceInfo: ServiceInfo);
+    fun onServiceLost(serviceInfo: ServiceInfo)
 }
 
 interface ConnectionListener {
@@ -69,7 +69,7 @@ interface MessageListener {
     /**
      * 自定义消息事件
      */
-    fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any)
+    fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int)
 }
 
 interface InitializeListener {
@@ -94,6 +94,8 @@ interface ILinkReceiver {
     fun unregisterService()
 
     fun registerMessageCodec(codec: MessageCodec)
+
+    fun destroy()
 }
 
 interface ILinkSender {
@@ -118,9 +120,11 @@ interface ILinkSender {
 
     fun registerMessageCodec(codec: MessageCodec)
 
-    fun sendCastTask(serviceInfo: ServiceInfo, uri: String, mediaType: MediaType, actionType: ActionType)
+    fun castMedia(serviceInfo: ServiceInfo, path: String, mediaType: MediaType)
 
-    fun sendCastExit(serviceInfo: ServiceInfo)
+    fun transferFile(serviceInfo: ServiceInfo, path: String)
+
+    fun castExit(serviceInfo: ServiceInfo)
 
     fun sendMessage(serviceInfo: ServiceInfo, msg: Any, tag: String?)
 
@@ -129,6 +133,8 @@ interface ILinkSender {
     fun serveFile(path: String?): String
 
     fun serveFile(uri: Uri?): String
+
+    fun destroy()
 }
 
 abstract class MessageCodec {

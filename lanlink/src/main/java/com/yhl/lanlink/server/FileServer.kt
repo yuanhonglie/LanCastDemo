@@ -7,7 +7,7 @@ import java.io.File
 
 
 
-class FileServer: SimpleWebServer(null,
+class FileServer(private val mConnectionManager: ConnectionManager): SimpleWebServer(null,
     FILE_SERVER_PORT, File("."),
     LOG_DISABLE
 ) {

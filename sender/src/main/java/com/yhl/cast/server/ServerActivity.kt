@@ -72,7 +72,7 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
         val serviceInfo = mServiceInfo
         if (serviceInfo != null) {
             println("sendCastTask isConnected = ${serviceInfo.isConnected()}")
-            LanLinkSender.getInstance().sendCastTask(serviceInfo, uri, type, ActionType.cast)
+            LanLinkSender.getInstance().castMedia(serviceInfo, uri, type)
         } else {
             toast("请先连接接收端！")
         }

@@ -16,7 +16,7 @@ abstract class BaseActivity() : AppCompatActivity(), MessageListener {
         super.onStop()
     }
 
-    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
+    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
 
     }
 }

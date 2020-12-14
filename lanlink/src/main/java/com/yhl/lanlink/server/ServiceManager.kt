@@ -1,20 +1,20 @@
 package com.yhl.lanlink.server
 
+import android.app.Service
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.os.*
 import com.yhl.lanlink.*
 import com.yhl.lanlink.channel.Channel
-import com.yhl.lanlink.data.ActionType
-import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.util.getIPv4Address
 
-class ServiceManager private constructor(context: Context): ILanLinkService.Stub() {
+class ServiceManager private constructor(val service: HttpService): ILanLinkService.Stub() {
     private val TAG = ServiceManager::class.simpleName
-    private var mNsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+    private var mNsdManager: NsdManager = service.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var mWorkerThread: HandlerThread
     private var mWorkerHandler: WorkerHandler
+    private val mUiHandler = Handler(Looper.getMainLooper())
     private val serviceMap = mutableMapOf<String, ServiceInfo>()
     private val mChannelMap = mutableMapOf<String, Channel>()
 
@@ -167,10 +167,6 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
         }
     }
 
-    override fun setClientMessenger(messenger: Messenger?) {
-        println("setClientMessenger: $messenger")
-    }
-
     override fun setRegistrationListener(listener: IRegistrationListener?) {
         mRegistrationListener = listener
     }
@@ -181,20 +177,6 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
 
     override fun setConnectionListener(listener: IConnectionListener?) {
         mConnectionListener = listener
-    }
-
-    override fun sendCastTask(serviceId: String?, uri: String?, mediaType: String?, actionType: String?) {
-        val serviceInfo = serviceMap[serviceId]
-        println("sendCastTask: serviceInfo=$serviceInfo uri=$uri mediaType=$mediaType")
-        if (uri != null && mediaType != null && actionType != null) {
-            serviceInfo?.sendCastTask(serveFile(uri), MediaType.valueOf(mediaType), ActionType.valueOf(actionType))
-        }
-    }
-
-
-    override fun sendCastExit(serviceId: String?) {
-        val serviceInfo = serviceMap[serviceId]
-        serviceInfo?.sendCastExit()
     }
 
     override fun send(serviceId: String?, msg: Msg?) {
@@ -217,18 +199,32 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
         mWorkerHandler.post(r)
     }
 
+    private fun runOnUiThread(delayMillis: Long, r: () -> Unit) {
+        mUiHandler.postDelayed(r, delayMillis)
+    }
+
     private fun runOnUiThread(r: () -> Unit) {
         r.invoke()
     }
 
     override fun destroy() {
         println("ServiceManager::destroy()")
+        service.stopServer()
+        runOnUiThread (1000) {
+            service.stopSelf()
+        }
+    }
+
+    fun onDestroy() {
+        println("ServiceManager::onDestroy()")
+        stopDiscovery()
         mConnectionManager.destroy()
         serviceMap.clear()
         mRegistrationListener = null
         mDiscoveryListener = null
         mConnectionListener = null
         mWorkerThread.quit()
+        instance = null
     }
 
     private val registrationListener = object : NsdManager.RegistrationListener {
@@ -350,12 +346,11 @@ class ServiceManager private constructor(context: Context): ILanLinkService.Stub
     companion object {
         @Volatile
         private var instance: ServiceManager? = null
-        fun getInstance(c: Context): ServiceManager {
+        fun getInstance(s: HttpService): ServiceManager {
             if (instance == null) {
                 synchronized(ServiceManager::class) {
                     if (instance == null) {
-                        instance =
-                            ServiceManager(c)
+                        instance = ServiceManager(s)
                     }
                 }
             }

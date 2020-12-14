@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
 import com.bumptech.glide.Glide
+import com.yhl.lanlink.RESULT_SUCCESS
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.data.*
@@ -75,8 +76,12 @@ class CastViewActivity : BaseActivity() {
         }
     }
 
-    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any) {
-        super.onMessage(serviceInfo, type, data)
+    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
+        super.onMessage(serviceInfo, type, data, resultCode)
+        if (resultCode != RESULT_SUCCESS) {
+            println("onMessage: resultCode=$resultCode")
+            return
+        }
         when (type) {
             TaskInfo::class.qualifiedName -> {
                 if (data is TaskInfo) {

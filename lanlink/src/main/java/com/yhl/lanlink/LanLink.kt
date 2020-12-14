@@ -5,16 +5,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
-import android.os.*
-import com.yhl.lanlink.data.ActionType
-import com.yhl.lanlink.data.ControlInfoCodec
-import com.yhl.lanlink.data.MediaType
-import com.yhl.lanlink.data.TaskInfoCodec
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import com.yhl.lanlink.data.*
 import com.yhl.lanlink.interfaces.*
 import com.yhl.lanlink.server.HttpService
+import java.io.File
 import java.lang.ref.WeakReference
 
-class LanLink: ILinkReceiver, ILinkSender {
+class LanLink private constructor(private val context: Context): ILinkReceiver, ILinkSender {
 
     private var service: ILanLinkService? = null
     private val uiHandler = Handler(Looper.getMainLooper())
@@ -29,6 +29,27 @@ class LanLink: ILinkReceiver, ILinkSender {
 
     @Volatile
     private var initialized: Boolean = false
+    private var connection: ServiceConnection
+    init {
+        connection = object: ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                val service = ILanLinkService.Stub.asInterface(binder)
+                println("onServiceConnected: $service")
+                service?.let {
+                    onInitialized(it)
+                }
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                println("onServiceDisconnected: ")
+                initialized = false
+            }
+        }
+        val intent = Intent(context, HttpService::class.java)
+        context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        registerMessageCodec(TaskInfoCodec())
+        registerMessageCodec(ControlInfoCodec())
+    }
 
     override fun isInitialized() = initialized
 
@@ -63,26 +84,6 @@ class LanLink: ILinkReceiver, ILinkSender {
     }
 
     fun getMessageListener() = messageListener?.getInstance()
-
-    private constructor(context: Context) {
-        val connection = object: ServiceConnection {
-            override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-                val service = ILanLinkService.Stub.asInterface(binder)
-                println("onServiceConnected: $service")
-                service?.let {
-                    onInitialized(it)
-                }
-            }
-
-            override fun onServiceDisconnected(name: ComponentName?) {
-                initialized = false
-            }
-        }
-        val intent = Intent(context, HttpService::class.java)
-        context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
-        registerMessageCodec(TaskInfoCodec())
-        registerMessageCodec(ControlInfoCodec())
-    }
 
     private fun onInitialized(service: ILanLinkService) {
         println("onInitialized: ")
@@ -130,12 +131,34 @@ class LanLink: ILinkReceiver, ILinkSender {
 
     fun getMessageCodec(tag: String) = messageCodecs[tag]
 
-    override fun sendCastTask(serviceInfo: ServiceInfo, uri: String, mediaType: MediaType, actionType: ActionType) {
-        service?.sendCastTask(serviceInfo.id, uri, mediaType.toString(), actionType.toString())
+    override fun castMedia(serviceInfo: ServiceInfo, path: String, mediaType: MediaType) {
+        val url = serveFile(path)
+        val name = File(url).name
+        val media = Media(url, mediaType, name)
+        val task = TaskInfo(
+            media,
+            ActionType.cast,
+            PlayMode.single,
+            "cast-$name"
+        )
+        sendMessage(serviceInfo, task)
     }
 
-    override fun sendCastExit(serviceInfo: ServiceInfo) {
-        service?.sendCastExit(serviceInfo.id)
+    override fun transferFile(serviceInfo: ServiceInfo, path: String) {
+        val url = serveFile(path)
+        val name = File(url).name
+        val media = Media(url, MediaType.file, name)
+        val task = TaskInfo(
+            media,
+            ActionType.store,
+            PlayMode.single,
+            "transfer-$name"
+        )
+        sendMessage(serviceInfo, task)
+    }
+
+    override fun castExit(serviceInfo: ServiceInfo) {
+        sendMessage(serviceInfo, ControlInfo(CONTROL_EXIT_CAST))
     }
 
     override fun sendMessage(serviceInfo: ServiceInfo, msg: Any, tag: String?) {
@@ -170,9 +193,10 @@ class LanLink: ILinkReceiver, ILinkSender {
         uiHandler.post(r)
     }
 
-    private fun destroy() {
+    override fun destroy() {
         uiHandler.removeCallbacksAndMessages(null)
         service?.destroy()
+        context.unbindService(connection)
     }
 
     companion object {

@@ -58,7 +58,7 @@ class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListene
             if (codec != null && messageListener != null) {
                 val data = codec.decodeInner(msg)
                 lanLink.runOnUiThread {
-                    messageListener.onMessage(serviceInfo, msg.tag, data)
+                    messageListener.onMessage(serviceInfo, msg.tag, data, RESULT_SUCCESS)
                 }
             }
         }
