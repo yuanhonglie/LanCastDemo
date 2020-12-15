@@ -1,6 +1,5 @@
 package com.yhl.lanlink.server
 
-import android.app.Service
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
@@ -9,12 +8,11 @@ import com.yhl.lanlink.*
 import com.yhl.lanlink.channel.Channel
 import com.yhl.lanlink.util.getIPv4Address
 
-class ServiceManager private constructor(val service: HttpService): ILanLinkService.Stub() {
+class ServiceManager private constructor(private val service: HttpService): ILanLinkService.Stub() {
     private val TAG = ServiceManager::class.simpleName
     private var mNsdManager: NsdManager = service.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var mWorkerThread: HandlerThread
     private var mWorkerHandler: WorkerHandler
-    private val mUiHandler = Handler(Looper.getMainLooper())
     private val serviceMap = mutableMapOf<String, ServiceInfo>()
     private val mChannelMap = mutableMapOf<String, Channel>()
 
@@ -36,7 +34,6 @@ class ServiceManager private constructor(val service: HttpService): ILanLinkServ
             this,
             mWorkerThread.looper
         )
-        println("ServiceManager::init()")
     }
 
     private fun initWorkerThread() = HandlerThread("service-manager")
@@ -199,24 +196,15 @@ class ServiceManager private constructor(val service: HttpService): ILanLinkServ
         mWorkerHandler.post(r)
     }
 
-    private fun runOnUiThread(delayMillis: Long, r: () -> Unit) {
-        mUiHandler.postDelayed(r, delayMillis)
-    }
-
     private fun runOnUiThread(r: () -> Unit) {
         r.invoke()
     }
 
     override fun destroy() {
-        println("ServiceManager::destroy()")
-        service.stopServer()
-        runOnUiThread (1000) {
-            service.stopSelf()
-        }
+        println("::destroy()")
     }
 
     fun onDestroy() {
-        println("ServiceManager::onDestroy()")
         stopDiscovery()
         mConnectionManager.destroy()
         serviceMap.clear()

@@ -11,7 +11,13 @@ class HttpService: Service() {
     private var mHttpServer: HttpServer? = null
     private var mFileServer: NanoHTTPD? = null
 
+    override fun onCreate() {
+        super.onCreate()
+        println("onCreate: ")
+    }
+
     override fun onBind(intent: Intent?): IBinder? {
+        println("onBind: ")
         val serviceManager = ServiceManager.getInstance(this)
         startServer(serviceManager)
         return serviceManager
@@ -31,7 +37,7 @@ class HttpService: Service() {
         Log.i(TAG, "startServer: 1")
     }
 
-    fun stopServer() {
+    private fun stopServer() {
         Log.i(TAG, "stopServer: ")
         mHttpServer?.stop()
         mHttpServer = null
@@ -39,9 +45,9 @@ class HttpService: Service() {
         mFileServer = null
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startServer(ServiceManager.getInstance(this))
-        return START_STICKY
+    override fun onUnbind(intent: Intent?): Boolean {
+        println("onUnbind:")
+        return super.onUnbind(intent)
     }
 
     override fun onDestroy() {

@@ -8,8 +8,10 @@ class ClientApplication: Application() {
 
     override fun onCreate() {
         super.onCreate()
-        LanLinkReceiver.initialize(this)
-        LanLinkReceiver.getInstance().registerMessageCodec(UserCodec())
+
+        if (LanLinkReceiver.initialize(this)) {
+            LanLinkReceiver.getInstance().registerMessageCodec(UserCodec())
+        }
     }
 
 }

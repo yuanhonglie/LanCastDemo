@@ -57,6 +57,7 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
             onBackPressed()
         }
         btnStop.setOnClickListener {
+            btnStart.isSelected = false
             stopService()
         }
         btnStart.setOnClickListener {
@@ -72,7 +73,7 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
     private val deviceName: String?
         private get() {
             if (TextUtils.isEmpty(mDeviceName)) {
-                mDeviceName = "$SERVICE_NAME-$timeStamp"
+                mDeviceName = "$SERVICE_NAME-8888"
             }
             return mDeviceName
         }
@@ -143,8 +144,8 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
         initCastServer()
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
+    override fun onDestroy() {
+        super.onDestroy()
         LanLinkReceiver.getInstance().destroy()
         Process.killProcess(Process.myPid())
         System.exit(0)

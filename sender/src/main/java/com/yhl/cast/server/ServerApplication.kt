@@ -8,8 +8,9 @@ class ServerApplication: Application() {
 
     override fun onCreate() {
         super.onCreate()
-        LanLinkSender.initialize(this)
-        LanLinkSender.getInstance().registerMessageCodec(UserCodec())
+        if (LanLinkSender.initialize(this)) {
+            LanLinkSender.getInstance().registerMessageCodec(UserCodec())
+        }
     }
 
 }

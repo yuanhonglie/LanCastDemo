@@ -1,12 +1,21 @@
 package com.yhl.lanlink.util
 
+import android.app.ActivityManager
+import android.app.ActivityManager.RunningAppProcessInfo
+import android.app.Service
+import android.content.ComponentName
+import android.content.Context
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.GET_SERVICES
+import android.content.pm.ServiceInfo
+import android.os.Process
 import android.text.TextUtils
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.security.MessageDigest
 import java.util.*
-import kotlin.experimental.and
 
 
 private fun getIPAddress(useIPv4: Boolean): String {
@@ -47,6 +56,51 @@ private fun getIPAddress(useIPv4: Boolean): String {
         e.printStackTrace()
     }
     return ""
+}
+
+fun isInServiceProcess(
+    context: Context,
+    serviceClass: Class<out Service>
+): Boolean {
+    val packageManager = context.packageManager
+    val packageInfo = try {
+        packageManager.getPackageInfo(context.getPackageName(), GET_SERVICES)
+    } catch (e: java.lang.Exception) {
+        return false
+    }
+
+    val mainProcess = packageInfo.applicationInfo.processName
+    val component = ComponentName(context, serviceClass)
+    val serviceInfo = try {
+        packageManager.getServiceInfo(component, PackageManager.MATCH_DISABLED_COMPONENTS)
+    } catch (ignored: PackageManager.NameNotFoundException) {
+        return false
+    }
+
+    if (serviceInfo.processName == mainProcess) {
+        return false
+    }
+
+    val myPid = Process.myPid()
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    var myProcess: RunningAppProcessInfo? = null
+
+    val runningProcesses = try {
+        activityManager.runningAppProcesses
+    } catch (exception: SecurityException) {
+        return false
+    }
+
+    if (runningProcesses != null) {
+        for (process in runningProcesses) {
+            if (process.pid == myPid) {
+                myProcess = process
+                break
+            }
+        }
+    }
+
+    return myProcess?.processName == serviceInfo.processName
 }
 
 fun getIPv4Address() = getIPAddress(true)

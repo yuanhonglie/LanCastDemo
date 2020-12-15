@@ -5,6 +5,12 @@ import com.yhl.lanlink.interfaces.*
 
 class LanLinkSender private constructor(private val lanLink: LanLink) : ILinkSender by lanLink {
 
+    override fun destroy() {
+        lanLink.stopDiscovery()
+        lanLink.destroy()
+        instance = null
+    }
+
     companion object {
         private var instance: LanLinkSender? = null
         fun initialize(c: Context): Boolean {

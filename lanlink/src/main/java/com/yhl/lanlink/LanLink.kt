@@ -8,9 +8,11 @@ import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import com.yhl.lanlink.data.*
 import com.yhl.lanlink.interfaces.*
 import com.yhl.lanlink.server.HttpService
+import com.yhl.lanlink.util.isInServiceProcess
 import java.io.File
 import java.lang.ref.WeakReference
 
@@ -45,8 +47,10 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
                 initialized = false
             }
         }
-        val intent = Intent(context, HttpService::class.java)
-        context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        if (!isInServiceProcess(context, HttpService::class.java)) {
+            val intent = Intent(context, HttpService::class.java)
+            context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
         registerMessageCodec(TaskInfoCodec())
         registerMessageCodec(ControlInfoCodec())
     }
@@ -195,11 +199,16 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
 
     override fun destroy() {
         uiHandler.removeCallbacksAndMessages(null)
-        service?.destroy()
-        context.unbindService(connection)
+        if (initialized) {
+            service?.destroy()
+            context.unbindService(connection)
+            initialized = false
+            instance = null
+        }
     }
 
     companion object {
+        private val TAG = "LanLink"
         @Volatile
         private var instance: LanLink? = null
         fun initialize(c: Context): Boolean {

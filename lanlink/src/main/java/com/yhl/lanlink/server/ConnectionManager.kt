@@ -1,10 +1,10 @@
 package com.yhl.lanlink.server
 
-import android.os.Message
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.yhl.lanlink.*
+import com.yhl.lanlink.data.ControlInfo
 import com.yhl.lanlink.data.ResultData
 import com.yhl.lanlink.data.TaskInfo
 import fi.iki.elonen.NanoHTTPD
@@ -43,7 +43,7 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
         session: NanoHTTPD.IHTTPSession
     ): NanoHTTPD.Response {
         val token = parseToken(session)
-        return if (validateToken(token) || true) {
+        return if (validateToken(token)) {
 
             val adapter = mGson.getAdapter(TaskInfo::class.java)
             val reader = InputStreamReader(session.inputStream)
@@ -74,12 +74,24 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
         session: NanoHTTPD.IHTTPSession
     ): NanoHTTPD.Response {
         val token = parseToken(session)
-        return if (validateToken(token) || true) {
-            //println("parseMediaTransferBody: $mUiMessenger")
-            val msg = Message.obtain().apply {
-                what = 101
+        return if (validateToken(token)) {
+
+            val adapter = mGson.getAdapter(ControlInfo::class.java)
+            val value = ControlInfo(CONTROL_EXIT_CAST)
+
+            val buffer = Buffer()
+            val writer = OutputStreamWriter(buffer.outputStream(), Charset.forName("UTF-8"))
+            writer.use {
+                val jsonWriter = mGson.newJsonWriter(writer)
+                adapter.write(jsonWriter, value)
+                jsonWriter.close()
             }
-            //mUiMessenger?.send(msg)
+
+            val msg = Msg(ControlInfo::class.qualifiedName ?: "ControlInfo", buffer.readByteArray())
+            val serviceInfo = mClientMap[token]
+            if (serviceInfo != null) {
+                serviceManager.onReceiveMessage(serviceInfo, msg)
+            }
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
             newSimpleResultDataResponse(RESULT_FAILED, RESULT_MESSAGE_INVALID_TOKEN)
