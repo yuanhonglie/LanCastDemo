@@ -14,6 +14,7 @@ import android.widget.BaseAdapter
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.yhl.cast.client.data.Hello
 import com.yhl.cast.client.data.User
 import com.yhl.lanlink.LanLinkReceiver
 import com.yhl.lanlink.RESULT_SUCCESS
@@ -23,6 +24,7 @@ import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.Media
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.TaskInfo
+import com.yhl.lanlink.interfaces.ConnectionListener
 import kotlinx.android.synthetic.main.activity_receiver.*
 import kotlinx.android.synthetic.main.layout_lv_header.*
 import okhttp3.*
@@ -48,10 +50,22 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
         setContentView(R.layout.activity_receiver)
         initView()
         //checkPermission()
+        initLanLinkReceiver()
         mDownloader = Downloader(this)
     }
 
-    private fun initCastServer() {}
+    private fun initLanLinkReceiver() {
+        LanLinkReceiver.getInstance().setConnectionListener(object : ConnectionListener {
+            override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
+                println("onConnect: $serviceInfo")
+            }
+
+            override fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int) {
+                println("onDisconnect: $serviceInfo")
+            }
+
+        })
+    }
     private fun initView() {
         ivBack.setOnClickListener {
             onBackPressed()
@@ -120,7 +134,7 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
             )
             return
         }
-        initCastServer()
+        initLanLinkReceiver()
     }
 
     override fun onRequestPermissionsResult(
@@ -141,7 +155,7 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
             println("onRequestPermissionsResult: NOT PERMISSION_GRANTED")
             return
         }
-        initCastServer()
+        initLanLinkReceiver()
     }
 
     override fun onDestroy() {
@@ -178,6 +192,8 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
                 }
             }
         }
+
+        LanLinkReceiver.getInstance().sendMessage(serviceInfo, Hello("I'm receiver, i received your message: $type, ${serviceInfo.name}"), "hello-msg")
     }
 
     private fun startDownload(mediaItem: MediaItem) {

@@ -137,7 +137,7 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
 
     override fun castMedia(serviceInfo: ServiceInfo, path: String, mediaType: MediaType) {
         val url = serveFile(path)
-        val name = File(url).name
+        val name = File(path).name
         val media = Media(url, mediaType, name)
         val task = TaskInfo(
             media,
@@ -150,7 +150,7 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
 
     override fun transferFile(serviceInfo: ServiceInfo, path: String) {
         val url = serveFile(path)
-        val name = File(url).name
+        val name = File(path).name
         val media = Media(url, MediaType.file, name)
         val task = TaskInfo(
             media,

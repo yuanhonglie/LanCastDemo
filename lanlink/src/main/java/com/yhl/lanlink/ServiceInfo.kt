@@ -7,7 +7,7 @@ import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.util.md5
 
-class ServiceInfo: Parcelable {
+open class ServiceInfo: Parcelable {
 
     @Transient
     internal var channel: Channel? = null
@@ -90,13 +90,7 @@ class ServiceInfo: Parcelable {
     }
 }
 
-fun ServiceInfo.sendCastTask(uri: String, type: MediaType, action: ActionType) {
-    channel?.sendCastTask(uri, type, action)
-}
-
-fun ServiceInfo.sendCastExit() {
-    channel?.sendCastExit()
-}
+class ClientInfo(name: String?, host: String?, port: Int, val token: String): ServiceInfo(name, host, port)
 
 fun ServiceInfo.sendMessage(msg: Msg) {
     println("sendMessage: $channel, $msg")

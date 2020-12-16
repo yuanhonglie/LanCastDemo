@@ -8,7 +8,7 @@ import com.yhl.lanlink.interfaces.MessageCodec;
 
 import org.jetbrains.annotations.NotNull;
 
-public class UserCodec extends MessageCodec {
+public class UserCodecProto extends MessageCodec {
 
     @NotNull
     @Override

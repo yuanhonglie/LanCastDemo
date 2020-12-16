@@ -12,14 +12,14 @@ import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.POST
 
-interface MediaServerApi {
+interface MessageServerApi {
 
     /**
      * 请求建立连接
      */
     @Headers("Content-Type:application/json")
     @POST(URI_CONNECTION_CONNECT)
-    fun requestConnection(@Body serviceInfo: ServiceInfo): Call<ResultData<String>>
+    fun requestConnection(@Body clientInfo: ClientInfo): Call<ResultData<String>>
 
     /**
      * 心跳

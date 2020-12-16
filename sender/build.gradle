@@ -99,4 +99,5 @@ dependencies {
     //api files('libs/andpermission-release-v2.0.4.jar')
     implementation libraries.andPermission
     implementation libraries.protobuf_lite
+    implementation libraries.gson
 }

@@ -4,12 +4,11 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import fi.iki.elonen.NanoHTTPD
 
 val TAG = HttpService::class.simpleName
 class HttpService: Service() {
     private var mHttpServer: HttpServer? = null
-    private var mFileServer: NanoHTTPD? = null
+    private var mFileServer: FileServer? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -31,7 +30,7 @@ class HttpService: Service() {
         }
 
         if (mFileServer == null) {
-            mFileServer = FileServer(serviceManager.mConnectionManager)
+            mFileServer = FileServer(this, serviceManager.mConnectionManager)
             mFileServer!!.start()
         }
         Log.i(TAG, "startServer: 1")
@@ -43,6 +42,10 @@ class HttpService: Service() {
         mHttpServer = null
         mFileServer?.stop()
         mFileServer = null
+    }
+
+    fun getServeFilePath(path: String): String? {
+        return mFileServer?.serveFile(path) ?: ""
     }
 
     override fun onUnbind(intent: Intent?): Boolean {

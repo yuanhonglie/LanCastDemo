@@ -12,20 +12,21 @@ class ServiceManager private constructor(private val service: HttpService): ILan
     private val TAG = ServiceManager::class.simpleName
     private var mNsdManager: NsdManager = service.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var mWorkerThread: HandlerThread
-    private var mWorkerHandler: WorkerHandler
     private val serviceMap = mutableMapOf<String, ServiceInfo>()
+    private val clientMap = mutableMapOf<String, ServiceInfo>()
     private val mChannelMap = mutableMapOf<String, Channel>()
-
     private var mRegistrationListener: IRegistrationListener? = null
+
     private var mDiscoveryListener: IDiscoveryListener? = null
     private var mConnectionListener: IConnectionListener? = null
-
     @Volatile
     private var discovering = false
+
     @Volatile
     private var registered = false
 
     val mConnectionManager = ConnectionManager(this)
+    var mWorkerHandler: WorkerHandler
 
     init {
         mWorkerThread = initWorkerThread()
@@ -50,29 +51,33 @@ class ServiceManager private constructor(private val service: HttpService): ILan
                 }
                 MSG_WORKER_SERVER_DISCONNECT -> {
                     val channel = msg.obj as Channel
-                    serviceManager.notifyServerDisconnected(channel.server, msg.arg1)
+                    serviceManager.notifyServerDisconnected(channel.mServer, msg.arg1)
                 }
                 MSG_WORKER_SERVER_CONNECT -> {
                     val channel = msg.obj as Channel
-                    serviceManager.notifyServerConnected(channel.server, msg.arg1)
+                    serviceManager.notifyServerConnected(channel.mServer, msg.arg1)
                 }
             }
         }
     }
 
-    private inner class MainHandler(looper: Looper): Handler(looper)
-
     fun notifyServerConnected(serviceInfo: ServiceInfo, resultCode: Int) {
-        runOnUiThread {
-            mConnectionListener?.onConnect(serviceInfo, resultCode)
-        }
+        mConnectionListener?.onConnect(serviceInfo, resultCode)
     }
 
     fun notifyServerDisconnected(serviceInfo: ServiceInfo, resultCode: Int) {
         mChannelMap.remove(serviceInfo.id)
-        runOnUiThread {
-            mConnectionListener?.onDisconnect(serviceInfo, resultCode)
-        }
+        mConnectionListener?.onDisconnect(serviceInfo, resultCode)
+    }
+
+    fun notifyClientConnected(clientInfo: ServiceInfo, resultCode: Int) {
+        clientMap[clientInfo.id] = clientInfo
+        mConnectionListener?.onConnect(clientInfo, resultCode)
+    }
+
+    fun notifyClientDisconnected(clientInfo: ServiceInfo, resultCode: Int) {
+        clientMap.remove(clientInfo.id)
+        mConnectionListener?.onDisconnect(clientInfo, resultCode)
     }
 
     /**
@@ -145,7 +150,7 @@ class ServiceManager private constructor(private val service: HttpService): ILan
         } else {
             val serviceInfo = serviceMap[serviceId]
             if (serviceInfo != null) {
-                val channel = Channel(mWorkerHandler, serviceInfo)
+                val channel = Channel(mConnectionManager, mWorkerHandler, serviceInfo)
                 mChannelMap[serviceInfo.id] = channel
                 channel.connect()
             }
@@ -177,14 +182,29 @@ class ServiceManager private constructor(private val service: HttpService): ILan
     }
 
     override fun send(serviceId: String?, msg: Msg?) {
-        val serviceInfo = serviceMap[serviceId]
+        val serviceInfo = if (serviceMap.containsKey(serviceId)) {
+            val server = serviceMap[serviceId]
+            println("send message to server ${server?.host}")
+            server
+        } else if (clientMap.containsKey(serviceId)) {
+            val client = clientMap[serviceId]
+            println("send message to client ${client?.host}")
+            client
+        } else {
+            println("can not find serviceInfo id = $serviceId")
+            null
+        }
+
         println("send: $serviceInfo, $msg")
         if (msg != null) {
             serviceInfo?.sendMessage(msg)
         }
     }
 
-    override fun serveFile(path: String) = "${getFileServerUrl()}/$path"
+    override fun serveFile(path: String): String {
+        val encoded = service.getServeFilePath(path)
+        return "${getFileServerUrl()}/$encoded"
+    }
 
     private fun getFileServerUrl() = "http://${getIPv4Address()}:$FILE_SERVER_PORT"
 
@@ -208,6 +228,7 @@ class ServiceManager private constructor(private val service: HttpService): ILan
         stopDiscovery()
         mConnectionManager.destroy()
         serviceMap.clear()
+        clientMap.clear()
         mRegistrationListener = null
         mDiscoveryListener = null
         mConnectionListener = null

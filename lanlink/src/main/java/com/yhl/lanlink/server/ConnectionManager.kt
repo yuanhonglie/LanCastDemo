@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.yhl.lanlink.*
+import com.yhl.lanlink.channel.Channel
 import com.yhl.lanlink.data.ControlInfo
 import com.yhl.lanlink.data.ResultData
 import com.yhl.lanlink.data.TaskInfo
@@ -142,11 +143,17 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
         httpServer: HttpServer,
         session: NanoHTTPD.IHTTPSession
     ): NanoHTTPD.Response? {
-        val adapter = mGson.getAdapter(TypeToken.get(ServiceInfo::class.java))
+        val adapter = mGson.getAdapter(TypeToken.get(ClientInfo::class.java))
         val reader = InputStreamReader(session.inputStream)
-        val serviceInfo = adapter.fromJson(reader)
-        val token = registerClient(serviceInfo)
-        println("parseClientConnect: serviceInfo = $serviceInfo, token=$token")
+        val clientInfo = adapter.fromJson(reader)
+        val token = registerClient(clientInfo)
+        println("parseClientConnect: clientToken = ${clientInfo.token}")
+        if (clientInfo.token.isNullOrEmpty().not()) {
+            clientInfo.channel = Channel(this, serviceManager.mWorkerHandler, clientInfo, clientInfo.token)
+        }
+        //通知客户端连接
+        serviceManager.notifyClientConnected(clientInfo, RESULT_SUCCESS)
+        println("parseClientConnect: clientInfo = $clientInfo, token=$token")
         return newResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS, token)
     }
 
@@ -159,6 +166,13 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
     ): NanoHTTPD.Response? {
         val token = parseToken(session)
         return if (validateToken(token)) {
+
+            //通知客户端断开
+            val clientInfo = mClientMap[token]
+            if (clientInfo != null) {
+                serviceManager.notifyClientDisconnected(clientInfo, RESULT_SUCCESS)
+            }
+
             unregisterClient(token)
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
@@ -189,7 +203,7 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
     /**
      * 注册客户端信息
      */
-    private fun registerClient(client: ServiceInfo): String {
+    fun registerClient(client: ServiceInfo): String {
         return if (mTokenMap.containsKey(client.id)) {
             mTokenMap[client.id]!!
         } else {
@@ -207,10 +221,22 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
      */
     private fun unregisterClient(token: String) {
         mClientMap.remove(token)?.let {
+            it.channel?.close()
+            it.channel = null
             mTokenMap.remove(it.id)
         }
         mActiveTimes.remove(token)
         mTokens.remove(token)
+    }
+
+    /**
+     * 注销客户端信息
+     */
+    fun unregisterClient(serviceInfo: ServiceInfo) {
+        val token = mTokenMap[serviceInfo.id]
+        if (token != null) {
+            unregisterClient(token)
+        }
     }
 
     /**
@@ -223,7 +249,10 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
             println("validateToken: timeElapsed = ${nowTime - lastTime}, token=$token")
             mActiveTimes[token] = nowTime
             true
-        } else false
+        } else {
+            println("validateToken: invalid token = $token")
+            false
+        }
     }
 
     private fun parseToken(session: NanoHTTPD.IHTTPSession) = session.headers["token"] ?: ""

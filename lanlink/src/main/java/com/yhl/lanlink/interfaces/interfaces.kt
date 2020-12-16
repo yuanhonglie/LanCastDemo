@@ -85,6 +85,8 @@ interface ILinkReceiver {
 
     fun setInitializeListener(listener: InitializeListener?)
 
+    fun setConnectionListener(listener: ConnectionListener?)
+
     fun setRegistrationListener(listener: RegistrationListener?)
 
     fun setMessageListener(listener: MessageListener?)
@@ -94,6 +96,10 @@ interface ILinkReceiver {
     fun unregisterService()
 
     fun registerMessageCodec(codec: MessageCodec)
+
+    fun sendMessage(serviceInfo: ServiceInfo, msg: Any, tag: String?)
+
+    fun sendMessage(serviceInfo: ServiceInfo, msg: Any)
 
     fun destroy()
 }

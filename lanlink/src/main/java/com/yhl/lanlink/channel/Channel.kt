@@ -8,18 +8,24 @@ import com.yhl.lanlink.data.Media
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.TaskInfo
 import com.yhl.lanlink.http.HttpClient
-import com.yhl.lanlink.http.MediaServerApi
+import com.yhl.lanlink.http.MessageServerApi
+import com.yhl.lanlink.server.ConnectionManager
 import com.yhl.lanlink.server.ServiceManager
+import com.yhl.lanlink.util.getIPv4Address
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 
-internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler, internal val server: ServiceInfo) {
-
+internal class Channel(
+    private val mConnection: ConnectionManager,
+    private val mWorkerHandler: ServiceManager.WorkerHandler,
+    internal val mServer: ServiceInfo,
     private var mToken: String? = null
+) {
+
     private var mLost = 0
-    private var mApi: MediaServerApi
+    private var mApi: MessageServerApi
     @Volatile
     var isActive = false
     private set(value) {
@@ -33,13 +39,14 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
     }
 
     init {
-        val baseUrl = "http://${server.host}:${server.port}"
+        val baseUrl = "http://${mServer.host}:${mServer.port}"
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(HttpClient.client)
             .addConverterFactory(getConverterFactory())
             .build()
-        mApi = retrofit.create<MediaServerApi>(MediaServerApi::class.java)
+        mApi = retrofit.create<MessageServerApi>(MessageServerApi::class.java)
+        isConnected = mToken.isNullOrEmpty().not()
     }
 
     private fun getConverterFactory(): Converter.Factory {
@@ -109,12 +116,13 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
         msg.sendToTarget()
         if (resultCode == RESULT_SUCCESS) {
             isConnected = true
-            server.channel = this
+            mServer.channel = this
             scheduleHeartbeat()
         }
     }
 
     private fun onDisconnect(resultCode: Int) {
+        mConnection.unregisterClient(mServer)
         close()
         val msg = mWorkerHandler.obtainMessage(MSG_WORKER_SERVER_DISCONNECT)
         msg.obj = this
@@ -131,7 +139,11 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
     @WorkerThread
     private fun requestConnect() {
         try {
-            val call = mApi.requestConnection(server)
+            //连接远端服务成功，将远端结点注册到本地服务，后续远端结点也可以发送消息给本地服务
+            val localToken = mConnection.registerClient(mServer)
+            //将本地的结点信息传递给远端服务
+            val client = ClientInfo("锤子手机", getIPv4Address(), MESSAGE_SERVER_PORT, localToken)
+            val call = mApi.requestConnection(client)
             val response = call.execute()
             val result = response.body()
             if (result != null && result.errorCode == RESULT_SUCCESS) {
@@ -264,10 +276,10 @@ internal class Channel(private val mWorkerHandler: ServiceManager.WorkerHandler,
         mWorkerHandler.post(r)
     }
 
-    private fun close() {
+    fun close() {
         isConnected = false
         isActive = false
         mToken = null
-        server.channel = null
+        mServer.channel = null
     }
 }

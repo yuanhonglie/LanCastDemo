@@ -109,4 +109,5 @@ dependencies {
     implementation libraries.andPermission
     implementation project(":lanlink")
     implementation libraries.protobuf_lite
+    implementation libraries.gson
 }

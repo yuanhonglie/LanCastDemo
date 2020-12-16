@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.runtime.Permission;
 import com.yhl.cast.server.adapter.AlbumAdapter;
 import com.yhl.cast.server.albumpicker.api.Filter;
 import com.yhl.cast.server.albumpicker.api.OnItemClickListener;
@@ -27,22 +29,21 @@ import com.yhl.cast.server.albumpicker.data.MediaReader;
 import com.yhl.cast.server.albumpicker.model.AlbumFile;
 import com.yhl.cast.server.albumpicker.model.AlbumFolder;
 import com.yhl.cast.server.albumpicker.widget.photoview.ItemDivider;
+import com.yhl.cast.server.data.Hello;
 import com.yhl.cast.server.data.UserInfo;
 import com.yhl.lanlink.LanLinkSender;
 import com.yhl.lanlink.ServiceInfo;
 import com.yhl.lanlink.base.BaseActivity;
 import com.yhl.lanlink.data.ActionType;
-import com.yhl.lanlink.data.ControlInfo;
-import com.yhl.lanlink.data.Media;
 import com.yhl.lanlink.data.MediaType;
-import com.yhl.lanlink.data.PlayMode;
-import com.yhl.lanlink.data.TaskInfo;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.yhl.lanlink.ConfigKt.RESULT_SUCCESS;
 
 
 /**
@@ -143,8 +144,8 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
         mLayoutLoading.setVisibility(View.VISIBLE);
         AndPermission.with(this)
                 .runtime()
-                .permission(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest
-                        .permission.WRITE_EXTERNAL_STORAGE)
+                .permission(Permission.READ_EXTERNAL_STORAGE,
+                        Permission.WRITE_EXTERNAL_STORAGE)
                 .onDenied(new Action<List<String>>() {
                     @Override
                     public void onAction(List<String> strings) {
@@ -358,19 +359,35 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
                 type = MediaType.video;
                 break;
         }
-        String name = new File(path).getName();
-        String url = LanLinkSender.Companion.getInstance().serveFile(path);
-        Media media = new Media(url, type, name);
-        TaskInfo taskInfo = new TaskInfo(media, actionType, PlayMode.single, "test-album-name");
+
         if (ActionType.cast == actionType) {
             LanLinkSender.Companion.getInstance().castMedia(mServiceInfo, path, type);
         } else if (ActionType.store == actionType) {
             LanLinkSender.Companion.getInstance().transferFile(mServiceInfo, path);
         }
-
     }
 
     private void showShort(@StringRes int resId) {
         Toast.makeText(this, resId, Toast.LENGTH_SHORT);
+    }
+
+    @Override
+    public void onMessage(@NotNull ServiceInfo serviceInfo, @NotNull String type, @NotNull Object data, int resultCode) {
+        super.onMessage(serviceInfo, type, data, resultCode);
+        if (resultCode != RESULT_SUCCESS) {
+            Log.i(TAG, "onMessage: resultCode=$resultCode");
+            return;
+        }
+
+        switch (type) {
+            case "hello-msg":
+                Hello hello = data instanceof Hello ? ((Hello) data) : null;
+                if (hello != null) {
+                    Log.i(TAG, "onMessage: hello = " + hello);
+                }
+                break;
+            default:
+                break;
+        }
     }
 }
