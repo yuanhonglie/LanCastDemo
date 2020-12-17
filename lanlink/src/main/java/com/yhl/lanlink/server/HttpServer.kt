@@ -7,8 +7,8 @@ import fi.iki.elonen.NanoHTTPD
 
 class HttpServer(private val mConnectionManager: ConnectionManager): NanoHTTPD(MESSAGE_SERVER_PORT) {
 
+    private val TAG = "HttpServer"
     override fun serve(session: IHTTPSession?): Response {
-        println("serve: thread = {${Thread.currentThread().name}}")
         val method = session?.method
         if (Method.POST == method) {
             return parseBody(session) ?: responseHello(session)

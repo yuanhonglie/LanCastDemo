@@ -14,6 +14,13 @@ interface IConnectionListener {
      */
     void onDisconnect(inout ServiceInfo serviceInfo, int resultCode);
 
+    /**
+     * 消息接收事件
+     */
+    void onMessageReceive(inout ServiceInfo serviceInfo, inout Msg msg);
 
-    void onMessage(inout ServiceInfo serviceInfo, inout Msg msg);
+    /**
+     * 消息发送事件
+     */
+    //void onMessageSend(inout ServiceInfo serviceInfo, int resultCode);
 }

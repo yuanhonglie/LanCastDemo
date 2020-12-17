@@ -9,6 +9,7 @@ import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.data.TaskInfo
 import com.yhl.lanlink.http.HttpClient
 import com.yhl.lanlink.http.MessageServerApi
+import com.yhl.lanlink.log.Logger
 import com.yhl.lanlink.server.ConnectionManager
 import com.yhl.lanlink.server.ServiceManager
 import com.yhl.lanlink.util.getIPv4Address
@@ -18,12 +19,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 
 internal class Channel(
-    private val mConnection: ConnectionManager,
+    private val mLocalConnection: ConnectionManager,
     private val mWorkerHandler: ServiceManager.WorkerHandler,
     internal val mServer: ServiceInfo,
     private var mToken: String? = null
 ) {
-
+    private val TAG = "Channel"
     private var mLost = 0
     private var mApi: MessageServerApi
     @Volatile
@@ -80,31 +81,18 @@ internal class Channel(
             } else {
                 mLost++
             }
-            println("heartBeat: $mLost")
+            Logger.i(TAG, "heartBeat: $mLost")
             if (mLost >= MAX_SERVER_HEART_BEAT_LOST) {
-                onDisconnect(RESULT_FAILED_SERVER_TIMEOUT)
+                onDisconnect(RESULT_FAILED_RECEIVER_TIMEOUT)
                 return
             }
             scheduleHeartbeat()
         }
     }
 
-    fun sendCastTask(uri: String, type: MediaType, action: ActionType) {
-        runOnWorkerThread {
-            requestCastTask(uri, type, action)
-        }
-    }
-
     fun sendMessage(msg: Msg) {
         runOnWorkerThread {
             requestSendMessage(msg)
-        }
-    }
-
-
-    fun sendCastExit() {
-        runOnWorkerThread {
-            requestCastExit()
         }
     }
 
@@ -122,7 +110,7 @@ internal class Channel(
     }
 
     private fun onDisconnect(resultCode: Int) {
-        mConnection.unregisterClient(mServer)
+        mLocalConnection.unregisterClient(mServer)
         close()
         val msg = mWorkerHandler.obtainMessage(MSG_WORKER_SERVER_DISCONNECT)
         msg.obj = this
@@ -140,7 +128,7 @@ internal class Channel(
     private fun requestConnect() {
         try {
             //连接远端服务成功，将远端结点注册到本地服务，后续远端结点也可以发送消息给本地服务
-            val localToken = mConnection.registerClient(mServer)
+            val localToken = mLocalConnection.registerClient(mServer)
             //将本地的结点信息传递给远端服务
             val client = ClientInfo("锤子手机", getIPv4Address(), MESSAGE_SERVER_PORT, localToken)
             val call = mApi.requestConnection(client)
@@ -148,13 +136,13 @@ internal class Channel(
             val result = response.body()
             if (result != null && result.errorCode == RESULT_SUCCESS) {
                 mToken = result.data
-                println("connect: token = $mToken")
+                Logger.i(TAG, "connect: token = $mToken")
                 onConnect(if (mToken == null) RESULT_FAILED_INVALID_TOKEN else RESULT_SUCCESS)
             } else {
                 onConnect(RESULT_FAILED)
             }
         } catch (e: Exception) {
-            println("connect: error = ${e.message}")
+            Logger.e(TAG, "connect: error = ${e.message}")
             onConnect(RESULT_FAILED)
         }
     }
@@ -176,7 +164,7 @@ internal class Channel(
                 onDisconnect(RESULT_FAILED_INVALID_TOKEN)
             }
         } catch (e: Exception) {
-            println("disconnect: error = ${e.message}")
+            Logger.e(TAG, "disconnect: error = ${e.message}")
             onDisconnect(RESULT_FAILED)
         }
     }
@@ -193,16 +181,17 @@ internal class Channel(
                     val requestTimestamp = result.data as Long
                     val nowTime = System.currentTimeMillis()
                     val timeCost = nowTime - requestTimestamp
-                    println("requestHeartbeat: timeCost = $timeCost")
+                    Logger.i(TAG, "requestHeartbeat: timeCost = $timeCost")
                     true
                 } else {
                     false
                 }
             } else {
+                Logger.e(TAG, "requestHeartbeat: invalid token")
                 false
             }
         } catch (e: Exception) {
-            println("requestHeartbeat: error = ${e.message}")
+            Logger.e(TAG, "requestHeartbeat: error = ${e.message}")
             false
         }
     }
@@ -219,15 +208,15 @@ internal class Channel(
                 val call = mApi.requestTransfer(token, taskInfo)
                 val response = call.execute()
                 val result = response.body()
-                println("requestCastTask: result = $result")
+                Logger.i(TAG, "requestCastTask: result = $result")
                 if (result != null && result.errorCode == RESULT_SUCCESS) {
 
                 }
             } else {
-                println("requestCastTask: invalid token")
+                Logger.e(TAG, "requestCastTask: invalid token")
             }
         } catch (e: Exception) {
-            println("requestCastTask: error = ${e.message}")
+            Logger.e(TAG, "requestCastTask: error = ${e.message}")
         }
     }
 
@@ -239,15 +228,15 @@ internal class Channel(
                 val call = mApi.requestCastExit(token)
                 val response = call.execute()
                 val result = response.body()
-                println("requestCastTask: result = $result")
+                Logger.i(TAG, "requestCastTask: result = $result")
                 if (result != null && result.errorCode == RESULT_SUCCESS) {
 
                 }
             } else {
-                println("requestCastTask: invalid token")
+                Logger.e(TAG, "requestCastTask: invalid token")
             }
         } catch (e: Exception) {
-            println("requestCastTask: error = ${e.message}")
+            Logger.e(TAG, "requestCastTask: error = ${e.message}")
         }
     }
 
@@ -255,20 +244,20 @@ internal class Channel(
     private fun requestSendMessage(msg: Msg) {
         try {
             val token = mToken
-            println("requestSendMessage: token = $token")
+            Logger.i(TAG, "requestSendMessage: token = $token")
             if (token != null) {
                 val call = mApi.requestSendMessage(token, msg)
                 val response = call.execute()
                 val result = response.body()
-                println("requestSendMessage: result = $result")
+                Logger.i(TAG, "requestSendMessage: result = $result")
                 if (result != null && result.errorCode == RESULT_SUCCESS) {
 
                 }
             } else {
-                println("requestSendMessage: invalid token")
+                Logger.e(TAG, "requestSendMessage: invalid token")
             }
         } catch (e: Exception) {
-            println("requestCastTask: error = ${e.message}")
+            Logger.e(TAG, "requestCastTask: error = ${e.message}")
         }
     }
 

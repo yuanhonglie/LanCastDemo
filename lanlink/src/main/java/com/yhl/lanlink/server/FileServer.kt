@@ -1,9 +1,9 @@
 package com.yhl.lanlink.server
 
 import android.content.Context
-import android.net.Uri
 import com.yhl.lanlink.FILE_SERVER_PORT
 import com.yhl.lanlink.LOG_DISABLE
+import com.yhl.lanlink.log.Logger
 import com.yhl.lanlink.util.md5
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.SimpleWebServer
@@ -19,14 +19,14 @@ class FileServer(private val context: Context, private val mConnectionManager: C
     LOG_DISABLE
 ) {
 
-    private val TAG = FileServer::class.simpleName
+    private val TAG = "FileServer"
     private val fileMap = mutableMapOf<String, String>()
 
 
     private val fileServerPlugin = object : WebServerPlugin {
         override fun canServeUri(uri: String?, rootDir: File?): Boolean {
             val key = parseFileKey(uri)
-            println("canServeUri: uri=$uri, key=$key, rootDir=$rootDir?.")
+            Logger.i(TAG, "canServeUri: uri=$uri, key=$key, rootDir=$rootDir?.")
             return fileMap.containsKey(key)
         }
 
@@ -75,7 +75,7 @@ class FileServer(private val context: Context, private val mConnectionManager: C
     ): Response {
         val key = parseFileKey(uri)
         val path = fileMap[key]
-        println("serveFile: path=$path, key=$key, uri=$uri")
+        Logger.i(TAG, "serveFile: path=$path, key=$key, uri=$uri")
         val file = File(path)
 
         var res: Response

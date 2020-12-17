@@ -1,7 +1,9 @@
 package com.yhl.lanlink.interfaces
 
 import com.yhl.lanlink.*
+import com.yhl.lanlink.log.Logger
 
+private const val TAG = "interfaces"
 class IDiscoveryListenerImpl(private val lanLink: LanLink) : IDiscoveryListener.Stub() {
     override fun onServiceFound(serviceInfo: ServiceInfo) {
         lanLink.runOnUiThread {
@@ -50,15 +52,17 @@ class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListene
         }
     }
 
-    override fun onMessage(serviceInfo: ServiceInfo, msg: Msg?) {
+    override fun onMessageReceive(serviceInfo: ServiceInfo, msg: Msg?) {
         msg?.let {
-            println("onMessage: ${msg.tag}")
+            Logger.i(TAG, "onMessage: ${msg.tag}")
             val codec = lanLink.getMessageCodec(msg.tag)
             val messageListener = lanLink.getMessageListener()
-            if (codec != null && messageListener != null) {
-                val data = codec.decodeInner(msg)
+            if (messageListener != null) {
+                val resultCode = RESULT_SUCCESS
+                if (codec == null) RESULT_FAILED_MESSAGE_PARSER_MISSING else RESULT_SUCCESS
+                val data = codec?.decodeInner(msg) ?: msg.data
                 lanLink.runOnUiThread {
-                    messageListener.onMessage(serviceInfo, msg.tag, data, RESULT_SUCCESS)
+                    messageListener.onMessage(serviceInfo, msg.tag, data, resultCode)
                 }
             }
         }

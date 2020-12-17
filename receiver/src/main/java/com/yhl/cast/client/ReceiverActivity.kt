@@ -58,6 +58,7 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
         LanLinkReceiver.getInstance().setConnectionListener(object : ConnectionListener {
             override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
                 println("onConnect: $serviceInfo")
+                LanLinkReceiver.getInstance().sendMessage(serviceInfo, Hello("Hello, ${serviceInfo.name}, I'm receiver"), "hello-msg")
             }
 
             override fun onDisconnect(serviceInfo: ServiceInfo, resultCode: Int) {
@@ -192,8 +193,6 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
                 }
             }
         }
-
-        LanLinkReceiver.getInstance().sendMessage(serviceInfo, Hello("I'm receiver, i received your message: $type, ${serviceInfo.name}"), "hello-msg")
     }
 
     private fun startDownload(mediaItem: MediaItem) {

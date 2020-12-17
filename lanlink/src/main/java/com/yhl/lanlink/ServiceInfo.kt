@@ -3,12 +3,10 @@ package com.yhl.lanlink
 import android.os.Parcel
 import android.os.Parcelable
 import com.yhl.lanlink.channel.Channel
-import com.yhl.lanlink.data.ActionType
-import com.yhl.lanlink.data.MediaType
+import com.yhl.lanlink.log.Logger
 import com.yhl.lanlink.util.md5
 
 open class ServiceInfo: Parcelable {
-
     @Transient
     internal var channel: Channel? = null
 
@@ -93,7 +91,7 @@ open class ServiceInfo: Parcelable {
 class ClientInfo(name: String?, host: String?, port: Int, val token: String): ServiceInfo(name, host, port)
 
 fun ServiceInfo.sendMessage(msg: Msg) {
-    println("sendMessage: $channel, $msg")
+    Logger.i("ServiceInfo", "sendMessage: $channel, $msg")
     channel?.sendMessage(msg)
 }
 

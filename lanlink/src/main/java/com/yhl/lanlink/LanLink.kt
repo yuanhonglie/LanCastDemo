@@ -8,9 +8,9 @@ import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import com.yhl.lanlink.data.*
 import com.yhl.lanlink.interfaces.*
+import com.yhl.lanlink.log.Logger
 import com.yhl.lanlink.server.HttpService
 import com.yhl.lanlink.util.isInServiceProcess
 import java.io.File
@@ -36,14 +36,14 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
         connection = object: ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                 val service = ILanLinkService.Stub.asInterface(binder)
-                println("onServiceConnected: $service")
+                Logger.i(TAG, "onServiceConnected: $service")
                 service?.let {
                     onInitialized(it)
                 }
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
-                println("onServiceDisconnected: ")
+                Logger.i(TAG, "onServiceDisconnected: ")
                 initialized = false
             }
         }
@@ -59,7 +59,7 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
 
     override fun setInitializeListener(listener: InitializeListener?) {
         initializeListener = if (listener == null) null else WeakReference(listener)
-        println("setInitializeListener: $listener, isInitialized = ${isInitialized()}")
+        Logger.i(TAG, "setInitializeListener: $listener, isInitialized = ${isInitialized()}")
         if (isInitialized()) {
             listener?.onInitialized()
         }
@@ -90,7 +90,7 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
     fun getMessageListener() = messageListener?.getInstance()
 
     private fun onInitialized(service: ILanLinkService) {
-        println("onInitialized: ")
+        Logger.i(TAG, "onInitialized: ")
         this.service = service
         service.setRegistrationListener(IRegistrationListenerImpl(this))
         service.setDiscoveryListener(IDiscoveryListenerImpl(this))
@@ -108,12 +108,12 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
     }
 
     override fun startDiscovery() {
-        println("startDiscovery")
+        Logger.i(TAG, "startDiscovery")
         service?.startDiscovery()
     }
 
     override fun stopDiscovery() {
-        println("stopDiscovery")
+        Logger.i(TAG, "stopDiscovery")
         service?.stopDiscovery()
     }
 

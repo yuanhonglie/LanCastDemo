@@ -5,12 +5,11 @@ import android.app.ActivityManager.RunningAppProcessInfo
 import android.app.Service
 import android.content.ComponentName
 import android.content.Context
-import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.GET_SERVICES
-import android.content.pm.ServiceInfo
 import android.os.Process
 import android.text.TextUtils
+import com.yhl.lanlink.log.Logger
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
@@ -113,11 +112,11 @@ fun String.md5(): String {
     }
 
     return try {
-        val instance:MessageDigest = MessageDigest.getInstance("MD5")//获取md5加密对象
-        val digest:ByteArray = instance.digest(toByteArray())//对字符串加密，返回字节数组
+        val instance: MessageDigest = MessageDigest.getInstance("MD5")//获取md5加密对象
+        val digest: ByteArray = instance.digest(toByteArray())//对字符串加密，返回字节数组
         var sb = StringBuffer()
         for (b in digest) {
-            var i :Int = b.toInt() and 0xff //获取低八位有效值
+            var i: Int = b.toInt() and 0xff //获取低八位有效值
             var hexString = Integer.toHexString(i) //将整数转化为16进制
             if (hexString.length < 2) {
                 hexString = "0" + hexString //如果是一位的话，补0
@@ -126,7 +125,7 @@ fun String.md5(): String {
         }
         sb.toString()
     } catch (e: Exception) {
-        println("md5: error = " + e.message)
+        Logger.e("String", "md5: error = " + e.message)
         ""
     }
 }

@@ -6,10 +6,12 @@ import android.net.nsd.NsdServiceInfo
 import android.os.*
 import com.yhl.lanlink.*
 import com.yhl.lanlink.channel.Channel
+import com.yhl.lanlink.log.Logger
 import com.yhl.lanlink.util.getIPv4Address
 
-class ServiceManager private constructor(private val service: HttpService): ILanLinkService.Stub() {
-    private val TAG = ServiceManager::class.simpleName
+class ServiceManager private constructor(private val service: HttpService) :
+    ILanLinkService.Stub() {
+    private val TAG = "ServiceManager"
     private var mNsdManager: NsdManager = service.getSystemService(Context.NSD_SERVICE) as NsdManager
     private var mWorkerThread: HandlerThread
     private val serviceMap = mutableMapOf<String, ServiceInfo>()
@@ -57,27 +59,53 @@ class ServiceManager private constructor(private val service: HttpService): ILan
                     val channel = msg.obj as Channel
                     serviceManager.notifyServerConnected(channel.mServer, msg.arg1)
                 }
+                MSG_WORKER_CHECK_CLIENT_TIMEOUT -> {
+                    serviceManager.performClientAliveCheck()
+                }
             }
         }
     }
 
+    /**
+     * 作为客户端，连接上目标服务端之后，告知应用层，当前已连接上服务端
+     */
     fun notifyServerConnected(serviceInfo: ServiceInfo, resultCode: Int) {
         mConnectionListener?.onConnect(serviceInfo, resultCode)
     }
 
+    /**
+     * 作为客户端，断开目标客户端之后，告知应用层，当前与某个服务端断开连接
+     */
     fun notifyServerDisconnected(serviceInfo: ServiceInfo, resultCode: Int) {
         mChannelMap.remove(serviceInfo.id)
         mConnectionListener?.onDisconnect(serviceInfo, resultCode)
     }
 
+    /**
+     * 作为服务端，客户端连接到当前服务端之后，告知APP，当前有客户端接入
+     */
     fun notifyClientConnected(clientInfo: ServiceInfo, resultCode: Int) {
+        performClientAliveCheck()
         clientMap[clientInfo.id] = clientInfo
         mConnectionListener?.onConnect(clientInfo, resultCode)
     }
 
+    /**
+     * 作为服务端，当有客户端断开后，告知APP，有客户端已经断开
+     */
     fun notifyClientDisconnected(clientInfo: ServiceInfo, resultCode: Int) {
         clientMap.remove(clientInfo.id)
         mConnectionListener?.onDisconnect(clientInfo, resultCode)
+    }
+
+    fun performClientAliveCheck() {
+        if (mConnectionManager.performClientsAliveCheck()) {
+            mWorkerHandler.removeMessages(MSG_WORKER_CHECK_CLIENT_TIMEOUT)
+            val msg = mWorkerHandler.obtainMessage(MSG_WORKER_CHECK_CLIENT_TIMEOUT)
+            mWorkerHandler.sendMessageDelayed(msg, INTERVAL_HEART_BEAT)
+        } else {
+            mWorkerHandler.removeMessages(MSG_WORKER_CHECK_CLIENT_TIMEOUT)
+        }
     }
 
     /**
@@ -92,7 +120,7 @@ class ServiceManager private constructor(private val service: HttpService): ILan
                     serviceType = LINK_SERVICE_TYPE
                     port = MESSAGE_SERVER_PORT
                 }
-                println("registerService: ${serviceInfo}")
+                Logger.i(TAG, "registerService: ${serviceInfo}")
                 mNsdManager.registerService(
                     serviceInfo,
                     NsdManager.PROTOCOL_DNS_SD,
@@ -146,7 +174,7 @@ class ServiceManager private constructor(private val service: HttpService): ILan
      */
     override fun connect(serviceId: String) {
         if (mChannelMap.containsKey(serviceId)) {
-            println("You have already connected to this server")
+            Logger.i(TAG, "You have already connected to this server")
         } else {
             val serviceInfo = serviceMap[serviceId]
             if (serviceInfo != null) {
@@ -165,7 +193,7 @@ class ServiceManager private constructor(private val service: HttpService): ILan
             val channel = mChannelMap[serviceId]
             channel?.disconnect()
         } else {
-            println("You can not disconnect a server unless you have connected to this server")
+            Logger.i(TAG, "You can not disconnect a server unless you have connected to this server")
         }
     }
 
@@ -184,18 +212,18 @@ class ServiceManager private constructor(private val service: HttpService): ILan
     override fun send(serviceId: String?, msg: Msg?) {
         val serviceInfo = if (serviceMap.containsKey(serviceId)) {
             val server = serviceMap[serviceId]
-            println("send message to server ${server?.host}")
+            Logger.i(TAG, "send message to server ${server?.host}")
             server
         } else if (clientMap.containsKey(serviceId)) {
             val client = clientMap[serviceId]
-            println("send message to client ${client?.host}")
+            Logger.i(TAG, "send message to client ${client?.host}")
             client
         } else {
-            println("can not find serviceInfo id = $serviceId")
+            Logger.i(TAG, "can not find serviceInfo id = $serviceId")
             null
         }
 
-        println("send: $serviceInfo, $msg")
+        Logger.i(TAG, "send: $serviceInfo, $msg")
         if (msg != null) {
             serviceInfo?.sendMessage(msg)
         }
@@ -209,7 +237,7 @@ class ServiceManager private constructor(private val service: HttpService): ILan
     private fun getFileServerUrl() = "http://${getIPv4Address()}:$FILE_SERVER_PORT"
 
     fun onReceiveMessage(serviceInfo: ServiceInfo, msg: Msg) {
-        mConnectionListener?.onMessage(serviceInfo, msg)
+        mConnectionListener?.onMessageReceive(serviceInfo, msg)
     }
 
     private fun runOnWorkerThread(r: () -> Unit) {
@@ -221,7 +249,7 @@ class ServiceManager private constructor(private val service: HttpService): ILan
     }
 
     override fun destroy() {
-        println("::destroy()")
+        Logger.i(TAG, "destroy: ")
     }
 
     fun onDestroy() {
@@ -238,28 +266,28 @@ class ServiceManager private constructor(private val service: HttpService): ILan
 
     private val registrationListener = object : NsdManager.RegistrationListener {
         override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-            println("onUnregistrationFailed: errorCode = $errorCode")
+            Logger.i(TAG, "onUnregistrationFailed: errorCode = $errorCode")
             runOnUiThread {
                 mRegistrationListener?.onServiceUnregistered(RESULT_FAILED)
             }
         }
 
         override fun onServiceUnregistered(serviceInfo: NsdServiceInfo?) {
-            println("onServiceUnregistered")
+            Logger.i(TAG, "onServiceUnregistered")
             runOnUiThread {
                 mRegistrationListener?.onServiceUnregistered(RESULT_SUCCESS)
             }
         }
 
         override fun onRegistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-            println("onRegistrationFailed: errorCode = ${errorCode}")
+            Logger.i(TAG, "onRegistrationFailed: errorCode = ${errorCode}")
             runOnUiThread {
                 mRegistrationListener?.onServiceRegistered(RESULT_FAILED)
             }
         }
 
         override fun onServiceRegistered(serviceInfo: NsdServiceInfo?) {
-            println("onServiceRegistered:")
+            Logger.i(TAG, "onServiceRegistered:")
             runOnUiThread {
                 mRegistrationListener?.onServiceRegistered(RESULT_SUCCESS)
             }
@@ -269,15 +297,15 @@ class ServiceManager private constructor(private val service: HttpService): ILan
     private val discoveryListener = object: NsdManager.DiscoveryListener {
 
         override fun onServiceFound(serviceInfo: NsdServiceInfo?) {
-            println("onServiceFound: ${serviceInfo}")
+            Logger.i(TAG, "onServiceFound: ${serviceInfo}")
             if (serviceInfo != null) {
                 mNsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
                     override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-                        println("onResolveFailed ${serviceInfo}")
+                        Logger.i(TAG, "onResolveFailed ${serviceInfo}")
                     }
 
                     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
-                        println("onServiceFound -> onServiceResolved ${serviceInfo}")
+                        Logger.i(TAG, "onServiceFound -> onServiceResolved ${serviceInfo}")
                         if (serviceInfo != null) {
                             runOnUiThread {
                                 val sInfo = ServiceInfo(
@@ -300,41 +328,41 @@ class ServiceManager private constructor(private val service: HttpService): ILan
         }
 
         override fun onStopDiscoveryFailed(serviceType: String?, errorCode: Int) {
-            println("onStopDiscoveryFailed: errorCode = ${errorCode}")
+            Logger.i(TAG, "onStopDiscoveryFailed: errorCode = ${errorCode}")
             runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStop(RESULT_FAILED)
             }
         }
 
         override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
-            println("onStartDiscoveryFailed: errorCode = ${errorCode}")
+            Logger.i(TAG, "onStartDiscoveryFailed: errorCode = ${errorCode}")
             runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStart(RESULT_FAILED)
             }
         }
 
         override fun onDiscoveryStarted(serviceType: String?) {
-            println("onDiscoveryStarted:")
+            Logger.i(TAG, "onDiscoveryStarted:")
             runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStart(RESULT_SUCCESS)
             }
         }
 
         override fun onDiscoveryStopped(serviceType: String?) {
-            println("onDiscoveryStopped:")
+            Logger.i(TAG, "onDiscoveryStopped:")
             runOnUiThread {
                 mDiscoveryListener?.onDiscoveryStop(RESULT_SUCCESS)
             }
         }
 
         override fun onServiceLost(serviceInfo: NsdServiceInfo?) {
-            println("onServiceLost:${serviceInfo}")
+            Logger.i(TAG, "onServiceLost:${serviceInfo}")
             if (serviceInfo != null) {
                 mNsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
                     override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) { }
 
                     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
-                        println("onServiceLost -> onServiceResolved ${serviceInfo}")
+                        Logger.i(TAG, "onServiceLost -> onServiceResolved ${serviceInfo}")
                         runOnUiThread {
                             if (serviceInfo != null) {
                                 val sInfo = ServiceInfo(

@@ -8,6 +8,7 @@ import com.yhl.lanlink.channel.Channel
 import com.yhl.lanlink.data.ControlInfo
 import com.yhl.lanlink.data.ResultData
 import com.yhl.lanlink.data.TaskInfo
+import com.yhl.lanlink.log.Logger
 import fi.iki.elonen.NanoHTTPD
 import okio.Buffer
 import java.io.InputStreamReader
@@ -15,9 +16,18 @@ import java.io.OutputStreamWriter
 import java.nio.charset.Charset
 import java.util.*
 
-class ConnectionManager(private val serviceManager: ServiceManager) {
+class ConnectionManager(private val mServiceManager: ServiceManager) {
+
+    private val TAG = "ConnectionManager"
 
     private var mGson: Gson = GsonBuilder().setLenient().create()
+
+    /**
+     * 当前的有效token集合，这里的token包括：
+     * 1）作为客户端，与服务端建立连接之后，后续服务端与客户端发送消息通信需要用token，此token在客户端连接服务端时，直接传递给服务端。
+     * 2）作为服务端，响应客户端的请求连接时，生成一个token。后续客户端与服务端之间的通信，如发送消息、发送心跳、请求断开连接等，都是通过这个token作为身份校验的。
+     */
+    private val mTokens = mutableSetOf<String>()
 
     /**
      * 与当前服务连接的client信息列表, token为key，serviceInfo为value
@@ -30,12 +40,7 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
     private val mTokenMap = mutableMapOf<String, String>()
 
     /**
-     * 当前的有效token集合
-     */
-    private val mTokens = mutableSetOf<String>()
-
-    /**
-     * 与服务连接的client的活跃时间，token为key，当前时间值为value
+     * 作为服务端，记录与之连接的client的最近活跃时间，token为key，时间值为value
      */
     private val mActiveTimes = mutableMapOf<String, Long>()
 
@@ -61,7 +66,7 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
             val msg = Msg(TaskInfo::class.qualifiedName ?: "TaskInfo", buffer.readByteArray())
             val serviceInfo = mClientMap[token]
             if (serviceInfo != null) {
-                serviceManager.onReceiveMessage(serviceInfo, msg)
+                mServiceManager.onReceiveMessage(serviceInfo, msg)
             }
 
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
@@ -91,7 +96,7 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
             val msg = Msg(ControlInfo::class.qualifiedName ?: "ControlInfo", buffer.readByteArray())
             val serviceInfo = mClientMap[token]
             if (serviceInfo != null) {
-                serviceManager.onReceiveMessage(serviceInfo, msg)
+                mServiceManager.onReceiveMessage(serviceInfo, msg)
             }
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
@@ -110,7 +115,7 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
             val msg = adapter.fromJson(reader)
             val serviceInfo = mClientMap[token]
             if (serviceInfo != null) {
-                serviceManager.onReceiveMessage(serviceInfo, msg)
+                mServiceManager.onReceiveMessage(serviceInfo, msg)
             }
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
@@ -147,13 +152,13 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
         val reader = InputStreamReader(session.inputStream)
         val clientInfo = adapter.fromJson(reader)
         val token = registerClient(clientInfo)
-        println("parseClientConnect: clientToken = ${clientInfo.token}")
+        Logger.i(TAG, "parseClientConnect: clientToken = ${clientInfo.token}")
         if (clientInfo.token.isNullOrEmpty().not()) {
-            clientInfo.channel = Channel(this, serviceManager.mWorkerHandler, clientInfo, clientInfo.token)
+            clientInfo.channel = Channel(this, mServiceManager.mWorkerHandler, clientInfo, clientInfo.token)
         }
         //通知客户端连接
-        serviceManager.notifyClientConnected(clientInfo, RESULT_SUCCESS)
-        println("parseClientConnect: clientInfo = $clientInfo, token=$token")
+        mServiceManager.notifyClientConnected(clientInfo, RESULT_SUCCESS)
+        Logger.i(TAG, "parseClientConnect: clientInfo = $clientInfo, token=$token")
         return newResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS, token)
     }
 
@@ -170,9 +175,8 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
             //通知客户端断开
             val clientInfo = mClientMap[token]
             if (clientInfo != null) {
-                serviceManager.notifyClientDisconnected(clientInfo, RESULT_SUCCESS)
+                mServiceManager.notifyClientDisconnected(clientInfo, RESULT_SUCCESS)
             }
-
             unregisterClient(token)
             newSimpleResultDataResponse(RESULT_SUCCESS, RESULT_MESSAGE_SUCCESS)
         } else {
@@ -246,17 +250,41 @@ class ConnectionManager(private val serviceManager: ServiceManager) {
         return if (mTokens.contains(token)) {
             val lastTime = mActiveTimes[token] ?: 0
             val nowTime = System.currentTimeMillis()
-            println("validateToken: timeElapsed = ${nowTime - lastTime}, token=$token")
+            Logger.i(TAG, "validateToken: timeElapsed = ${nowTime - lastTime}, token=$token")
             mActiveTimes[token] = nowTime
             true
         } else {
-            println("validateToken: invalid token = $token")
+            Logger.i(TAG, "validateToken: invalid token = $token")
             false
         }
     }
 
     private fun parseToken(session: NanoHTTPD.IHTTPSession) = session.headers["token"] ?: ""
+
     private fun parseTimestamp(session: NanoHTTPD.IHTTPSession) = session.headers["timestamp"] ?: 0
+
+    /**
+     * 判断此token是否为当前作为服务端，客户端请求连接时，为客户端生成的token
+     */
+    private fun isClientToken(token: String) = mClientMap.containsKey(token)
+
+    fun performClientsAliveCheck(): Boolean {
+        val nowTime = System.currentTimeMillis()
+        for ((token, time) in mActiveTimes) {
+            if (isClientToken(token)) {
+                if (nowTime - time > CLIENT_TIMEOUT) {
+                    val clientInfo = mClientMap[token]
+                    Logger.i(TAG, "performClientsAliveCheck: client = $clientInfo time out!")
+                    if (clientInfo != null) {
+                        mServiceManager.notifyClientDisconnected(clientInfo, RESULT_FAILED_SENDER_TIMEOUT)
+                    }
+                    unregisterClient(token)
+                }
+            }
+        }
+
+        return mClientMap.isNotEmpty()
+    }
 
     fun destroy() {
         mClientMap.clear()
