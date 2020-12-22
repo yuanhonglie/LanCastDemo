@@ -17,7 +17,7 @@ interface IConnectionListener {
     /**
      * 消息接收事件
      */
-    void onMessageReceive(inout ServiceInfo serviceInfo, inout Msg msg);
+    void onMessageReceive(inout ServiceInfo serviceInfo, in Msg msg);
 
     /**
      * 消息发送事件

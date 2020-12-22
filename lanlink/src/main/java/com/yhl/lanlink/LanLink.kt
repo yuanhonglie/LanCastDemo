@@ -232,5 +232,5 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
 }
 
 fun <T> WeakReference<T>.getInstance(): T? {
-    return this?.get() ?: null
+    return this?.get()
 }

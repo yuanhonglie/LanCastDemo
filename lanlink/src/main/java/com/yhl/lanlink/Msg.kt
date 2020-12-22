@@ -1,7 +1,9 @@
 package com.yhl.lanlink
 
 import android.os.Parcel
+import android.os.ParcelFileDescriptor
 import android.os.Parcelable
+import com.yhl.lanlink.ipc.MemoryFileHelper
 
 class Msg : Parcelable {
 
@@ -10,44 +12,60 @@ class Msg : Parcelable {
 
     var data: ByteArray = ByteArray(0)
         private set
+        get() {
+            val parcelFileDescriptor = pfd
+            if (field.isEmpty() && parcelFileDescriptor != null) {
+                val memoryFile = MemoryFileHelper.openMemoryFile(parcelFileDescriptor, size, MemoryFileHelper.OPEN_READONLY)
+                field = ByteArray(size)
+                memoryFile.readBytes(field, 0, 0, size)
+                memoryFile.close()
+            }
+            return field
+        }
 
-    constructor(tag: String, data: ByteArray = ByteArray(0)) {
+    var pfd: ParcelFileDescriptor? = null
+
+    var size: Int = 0
+
+    constructor(tag: String, pfd: ParcelFileDescriptor? = null, size: Int = 0,  data: ByteArray = ByteArray(0)) {
         this.tag = tag
         this.data = data
+        this.pfd = pfd
+        this.size = size
     }
+
+    constructor(tag: String, data: ByteArray = ByteArray(0)) : this(tag, null, 0, data)
 
     constructor(parcel: Parcel) : this(
-        parcel.readString() ?: "",
-        parcel.createByteArray() ?: ByteArray(0)
+            parcel.readString() ?: "",
+            parcel.readFileDescriptor(),
+            parcel.readInt(),
+            parcel.createByteArray() ?: ByteArray(0)
     )
 
-    constructor() : this("")
+    //constructor() : this("")
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Msg
-
-        if (tag != other.tag) return false
-        if (!data.contentEquals(other.data)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = tag.hashCode()
-        result = 31 * result + data.contentHashCode()
-        return result
+    init {
+        if (pfd == null && size == 0 && data.isNotEmpty()) {
+            val memoryFile = MemoryFileHelper.createMemoryFile(tag, data.size)
+            pfd = MemoryFileHelper.getParcelFileDescriptor(memoryFile)
+            memoryFile.writeBytes(data, 0, 0, data.size)
+            size = data.size
+        }
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(tag)
-        parcel.writeByteArray(data)
+        val fd = pfd?.fileDescriptor
+        parcel.writeFileDescriptor(fd)
+        parcel.writeInt(size)
+        parcel.writeByteArray(if (fd != null && size > 0) ByteArray(0) else data)
     }
 
     fun readFromParcel(parcel: Parcel) {
         tag = parcel.readString() ?: ""
+        pfd = parcel.readFileDescriptor()
+        size = parcel.readInt()
         data = parcel.createByteArray() ?: ByteArray(0)
     }
 

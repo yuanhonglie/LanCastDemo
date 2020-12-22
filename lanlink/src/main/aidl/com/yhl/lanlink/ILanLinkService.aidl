@@ -26,7 +26,7 @@ interface ILanLinkService {
 
     void setConnectionListener(IConnectionListener listener);
 
-    void send(String serviceId, inout Msg msg);
+    void send(String serviceId, in Msg msg);
 
     String serveFile(String path);
 
