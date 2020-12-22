@@ -96,8 +96,8 @@ class ClientActivity : BaseActivity(), RegistrationListener {
 
     }
 
-    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
-        super.onMessage(serviceInfo, type, data, resultCode)
+    override fun onReceive(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
+        super.onReceive(serviceInfo, type, data, resultCode)
         if (resultCode != RESULT_SUCCESS) {
             println("onMessage: resultCode=$resultCode")
             return

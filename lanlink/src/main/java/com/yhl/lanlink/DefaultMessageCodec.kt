@@ -1,4 +1,4 @@
-package com.yhl.lanlink.data
+package com.yhl.lanlink
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonIOException
@@ -11,20 +11,18 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.nio.charset.Charset
 
-class TaskInfoCodec: MessageCodec() {
-    private var gson = GsonBuilder().setLenient().create()
-    private var adapter: TypeAdapter<TaskInfo>
+class DefaultMessageCodec<T>(clazz: Class<T>, private val tag: String) : MessageCodec<T>() {
 
-    init {
-        adapter = gson.getAdapter(TaskInfo::class.java)
-    }
+    constructor(clazz: Class<T>) : this(clazz, clazz.name)
+
+    private var gson = GsonBuilder().setLenient().create()
+    private var adapter: TypeAdapter<T> = gson.getAdapter(clazz)
 
     override fun getMessageType(): String {
-        return TaskInfo::class.qualifiedName ?: "TaskInfo"
+        return tag
     }
 
-    override fun encode(msg: Any): ByteArray {
-        val value = msg as TaskInfo
+    override fun encode(value: T): ByteArray {
         val buffer = Buffer()
         val writer = OutputStreamWriter(buffer.outputStream(), Charset.forName("UTF-8"))
         val jsonWriter = gson.newJsonWriter(writer)
@@ -33,7 +31,7 @@ class TaskInfoCodec: MessageCodec() {
         return buffer.readByteArray()
     }
 
-    override fun decode(data: ByteArray): TaskInfo {
+    override fun decode(data: ByteArray): T {
         val input = ByteArrayInputStream(data)
         return input.use { input ->
             val reader = InputStreamReader(input)

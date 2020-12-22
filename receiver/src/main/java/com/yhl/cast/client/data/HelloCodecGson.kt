@@ -11,7 +11,7 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.nio.charset.Charset
 
-class HelloCodecGson : MessageCodec() {
+class HelloCodecGson : MessageCodec<Hello>() {
     private var gson = GsonBuilder().setLenient().create()
     private var adapter: TypeAdapter<Hello>
 
@@ -23,8 +23,8 @@ class HelloCodecGson : MessageCodec() {
         return "hello-msg"
     }
 
-    override fun encode(msg: Any): ByteArray {
-        val value = msg as Hello
+    override fun encode(msg: Hello): ByteArray {
+        val value = msg
         val buffer = Buffer()
         val writer = OutputStreamWriter(buffer.outputStream(), Charset.forName("UTF-8"))
         val jsonWriter = gson.newJsonWriter(writer)
@@ -33,7 +33,7 @@ class HelloCodecGson : MessageCodec() {
         return buffer.readByteArray()
     }
 
-    override fun decode(data: ByteArray): Any {
+    override fun decode(data: ByteArray): Hello {
         val input = ByteArrayInputStream(data)
         return input.use { input ->
             val reader = InputStreamReader(input)

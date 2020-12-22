@@ -29,15 +29,11 @@ internal class Channel(
     private var mApi: MessageServerApi
     @Volatile
     var isActive = false
-    private set(value) {
-        field = value
-    }
+    private set
 
     @Volatile
     var isConnected = false
-    private set(value) {
-        field = value
-    }
+    private set
 
     init {
         val baseUrl = "http://${mServer.host}:${mServer.port}"

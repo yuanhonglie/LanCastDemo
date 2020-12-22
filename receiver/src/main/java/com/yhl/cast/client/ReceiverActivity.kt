@@ -86,7 +86,7 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
     }
 
     private val deviceName: String?
-        private get() {
+        get() {
             if (TextUtils.isEmpty(mDeviceName)) {
                 mDeviceName = "$SERVICE_NAME-8888"
             }
@@ -94,7 +94,7 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
         }
 
     private val timeStamp: String
-        private get() {
+        get() {
             val timeText = "" + System.currentTimeMillis()
             val length = timeText.length
             val index =
@@ -166,8 +166,8 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
         System.exit(0)
     }
 
-    override fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
-        super.onMessage(serviceInfo, type, data, resultCode)
+    override fun onReceive(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
+        super.onReceive(serviceInfo, type, data, resultCode)
         if (resultCode != RESULT_SUCCESS) {
             println("onMessage: resultCode=$resultCode")
             return
@@ -235,14 +235,14 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
     }
 
     private fun writeFile(inputStream: InputStream, file: File) {
-        if (file.parentFile.exists().not()) {
-            file.parentFile.mkdirs()
+        if (file.parentFile?.exists() == false) {
+            file.parentFile?.mkdirs()
         }
 
         val outputStream = FileOutputStream(file)
         val buffer = ByteArray(1024 * 128)
-        var len = -1
-        while (inputStream.read(buffer).also({ len = it }) != -1) {
+        var len: Int
+        while (inputStream.read(buffer).also { len = it } != -1) {
             outputStream.write(buffer, 0, len)
         }
         outputStream.flush()
@@ -306,8 +306,8 @@ class ReceiverActivity : BaseActivity(), OnItemClickListener, DownloadProgressLi
             viewHolder.progress?.setProgress(mediaItem.progress)
             viewHolder.progress?.setOnClickListener {
                 println("getView: setOnClickListener")
-                val mediaItem = mediaList[position]
-                if (mediaItem.status == STATUS_DOWNLOADED) {
+                val item = mediaList[position]
+                if (item.status == STATUS_DOWNLOADED) {
                     onItemClickListener?.onClick(position, mediaList[position])
                 }
             }

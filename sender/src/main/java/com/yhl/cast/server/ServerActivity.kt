@@ -8,11 +8,9 @@ import com.yhl.lanlink.LanLinkSender
 import com.yhl.lanlink.RESULT_SUCCESS
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
-import com.yhl.lanlink.data.ActionType
 import com.yhl.lanlink.data.MediaType
 import com.yhl.lanlink.interfaces.ConnectionListener
 import com.yhl.lanlink.interfaces.DiscoveryListener
-import com.yhl.lanlink.isConnected
 import kotlinx.android.synthetic.main.activity_server.*
 
 
@@ -71,7 +69,7 @@ class ServerActivity : BaseActivity(), DiscoveryListener {
     private fun sendCastTask(uri: String, type: MediaType) {
         val serviceInfo = mServiceInfo
         if (serviceInfo != null) {
-            println("sendCastTask isConnected = ${serviceInfo.isConnected()}")
+            println("sendCastTask isConnected = ${serviceInfo.isConnected}")
             LanLinkSender.getInstance().castMedia(serviceInfo, uri, type)
         } else {
             toast("请先连接接收端！")

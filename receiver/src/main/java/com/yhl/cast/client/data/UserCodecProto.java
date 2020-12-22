@@ -8,7 +8,7 @@ import com.yhl.lanlink.interfaces.MessageCodec;
 
 import org.jetbrains.annotations.NotNull;
 
-public class UserCodecProto extends MessageCodec {
+public class UserCodecProto extends MessageCodec<User> {
 
     @NotNull
     @Override
@@ -18,7 +18,7 @@ public class UserCodecProto extends MessageCodec {
 
     @NotNull
     @Override
-    public byte[] encode(@NotNull Object msg) {
+    public byte[] encode(@NotNull User msg) {
         if (msg instanceof User) {
             User user = (User) msg;
             UserProto.User.Builder builder = UserProto.User.newBuilder();

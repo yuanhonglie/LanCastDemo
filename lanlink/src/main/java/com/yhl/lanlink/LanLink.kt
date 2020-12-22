@@ -21,7 +21,7 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
     private var service: ILanLinkService? = null
     private val uiHandler = Handler(Looper.getMainLooper())
 
-    private var messageCodecs = mutableMapOf<String, MessageCodec>()
+    private var messageCodecs = mutableMapOf<String, MessageCodec<*>>()
 
     private var initializeListener: WeakReference<InitializeListener?>? = null
     private var connectionListener: WeakReference<ConnectionListener?>? = null
@@ -51,8 +51,8 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
             val intent = Intent(context, HttpService::class.java)
             context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
-        registerMessageCodec(TaskInfoCodec())
-        registerMessageCodec(ControlInfoCodec())
+        registerMessageCodec(DefaultMessageCodec(TaskInfo::class.java))
+        registerMessageCodec(DefaultMessageCodec(ControlInfo::class.java))
     }
 
     override fun isInitialized() = initialized
@@ -125,7 +125,7 @@ class LanLink private constructor(private val context: Context): ILinkReceiver, 
         service?.disconnect(serviceInfo.id)
     }
 
-    override fun registerMessageCodec(codec: MessageCodec) {
+    override fun registerMessageCodec(codec: MessageCodec<*>) {
         if (messageCodecs.containsKey(codec.getMessageType())) {
             throw RuntimeException("You have register a codec with the same message type \"${codec.getMessageType()}\"")
         } else {

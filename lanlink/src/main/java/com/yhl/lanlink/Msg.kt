@@ -6,14 +6,10 @@ import android.os.Parcelable
 class Msg : Parcelable {
 
     var tag: String = ""
-        private set(value) {
-            field = value
-        }
+        private set
 
     var data: ByteArray = ByteArray(0)
-        private set(value) {
-            field = value
-        }
+        private set
 
     constructor(tag: String, data: ByteArray = ByteArray(0)) {
         this.tag = tag

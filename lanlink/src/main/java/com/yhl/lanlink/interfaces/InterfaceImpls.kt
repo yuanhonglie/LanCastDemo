@@ -62,7 +62,7 @@ class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListene
                 if (codec == null) RESULT_FAILED_MESSAGE_PARSER_MISSING else RESULT_SUCCESS
                 val data = codec?.decodeInner(msg) ?: msg.data
                 lanLink.runOnUiThread {
-                    messageListener.onMessage(serviceInfo, msg.tag, data, resultCode)
+                    messageListener.onReceive(serviceInfo, msg.tag, data, resultCode)
                 }
             }
         }

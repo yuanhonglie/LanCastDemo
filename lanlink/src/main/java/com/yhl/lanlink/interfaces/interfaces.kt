@@ -69,7 +69,7 @@ interface MessageListener {
     /**
      * 自定义消息事件
      */
-    fun onMessage(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int)
+    fun onReceive(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int)
 }
 
 interface InitializeListener {
@@ -95,7 +95,7 @@ interface ILinkReceiver {
 
     fun unregisterService()
 
-    fun registerMessageCodec(codec: MessageCodec)
+    fun registerMessageCodec(codec: MessageCodec<*>)
 
     fun sendMessage(serviceInfo: ServiceInfo, msg: Any, tag: String?)
 
@@ -124,7 +124,7 @@ interface ILinkSender {
 
     fun disconnect(serviceInfo: ServiceInfo)
 
-    fun registerMessageCodec(codec: MessageCodec)
+    fun registerMessageCodec(codec: MessageCodec<*>)
 
     fun castMedia(serviceInfo: ServiceInfo, path: String, mediaType: MediaType)
 
@@ -143,15 +143,15 @@ interface ILinkSender {
     fun destroy()
 }
 
-abstract class MessageCodec {
+abstract class MessageCodec<T> {
 
     abstract fun getMessageType() : String
 
-    abstract  fun encode(msg: Any): ByteArray
+    abstract  fun encode(msg: T): ByteArray
 
-    abstract fun decode(data: ByteArray): Any
+    abstract fun decode(data: ByteArray): T
 
-    internal fun encodeInner(data: Any) = Msg(getMessageType(), encode(data))
+    internal fun encodeInner(data: Any) = Msg(getMessageType(), encode(data as T))
 
     internal fun decodeInner(msg: Msg) = decode(msg.data)
 }

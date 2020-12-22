@@ -1,6 +1,5 @@
 package com.yhl.cast.server;
 
-import android.Manifest;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -372,8 +371,8 @@ public class AlbumPickActivity extends BaseActivity implements MediaReadTask.Cal
     }
 
     @Override
-    public void onMessage(@NotNull ServiceInfo serviceInfo, @NotNull String type, @NotNull Object data, int resultCode) {
-        super.onMessage(serviceInfo, type, data, resultCode);
+    public void onReceive(@NotNull ServiceInfo serviceInfo, @NotNull String type, @NotNull Object data, int resultCode) {
+        super.onReceive(serviceInfo, type, data, resultCode);
         if (resultCode != RESULT_SUCCESS) {
             Log.i(TAG, "onMessage: resultCode=$resultCode");
             return;

@@ -7,31 +7,32 @@ import com.yhl.lanlink.log.Logger
 import com.yhl.lanlink.util.md5
 
 open class ServiceInfo: Parcelable {
+
+    var id: String = ""
+        private set
+
+    var name: String = ""
+        private set
+
+    var host: String = ""
+        private set
+
+    var port: Int = 0
+        private set
+
     @Transient
     internal var channel: Channel? = null
 
-    var id: String = ""
-        private set(value) {
-            field = value
-        }
+    @Transient
+    var isConnected: Boolean = false
+        private set
+        get() = channel?.isConnected ?: false
 
-    var name: String = ""
-        private set(value) {
-            field = value
-        }
-    var host: String = ""
-        private set(value) {
-            field = value
-        }
-    var port: Int = 0
-        private set(value) {
-            field = value
-        }
-
-    constructor(name: String?, host: String?, port: Int) {
+    constructor(name: String?, host: String?, port: Int, connected: Boolean = false) {
         this.name = name ?: ""
         this.host = host ?: ""
         this.port = port
+        this.isConnected = connected
         updateId()
     }
 
@@ -48,19 +49,22 @@ open class ServiceInfo: Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readString(),
-        parcel.readInt()
+        parcel.readInt(),
+        parcel.readInt() != 0
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(name)
         parcel.writeString(host)
         parcel.writeInt(port)
+        parcel.writeInt(if (isConnected) 1 else 0)
     }
 
     fun readFromParcel(parcel: Parcel) {
         name = parcel.readString() ?: ""
         host = parcel.readString() ?: ""
         port = parcel.readInt()
+        isConnected = parcel.readInt() != 0
         updateId()
     }
 
@@ -83,7 +87,8 @@ open class ServiceInfo: Parcelable {
             append(name).append(", ")
                 .append(host).append(", ")
                 .append(port).append(", ")
-                .append(id)
+                .append(id).append(", ")
+                .append(isConnected)
         }
     }
 }
@@ -94,5 +99,3 @@ fun ServiceInfo.sendMessage(msg: Msg) {
     Logger.i("ServiceInfo", "sendMessage: $channel, $msg")
     channel?.sendMessage(msg)
 }
-
-fun ServiceInfo.isConnected() = channel?.isConnected ?: false
