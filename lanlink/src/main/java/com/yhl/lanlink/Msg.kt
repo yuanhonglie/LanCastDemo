@@ -27,20 +27,20 @@ class Msg : Parcelable {
 
     var size: Int = 0
 
-    constructor(tag: String, pfd: ParcelFileDescriptor? = null, size: Int = 0,  data: ByteArray = ByteArray(0)) {
+    constructor(tag: String, size: Int = 0,  data: ByteArray = ByteArray(0), pfd: ParcelFileDescriptor? = null) {
         this.tag = tag
         this.data = data
         this.pfd = pfd
         this.size = size
     }
 
-    constructor(tag: String, data: ByteArray = ByteArray(0)) : this(tag, null, 0, data)
+    constructor(tag: String, data: ByteArray = ByteArray(0)) : this(tag, 0, data, null)
 
     constructor(parcel: Parcel) : this(
             parcel.readString() ?: "",
-            parcel.readFileDescriptor(),
             parcel.readInt(),
-            parcel.createByteArray() ?: ByteArray(0)
+            parcel.createByteArray() ?: ByteArray(0),
+            parcel.readFileDescriptor()
     )
 
     //constructor() : this("")
@@ -56,17 +56,19 @@ class Msg : Parcelable {
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(tag)
-        val fd = pfd?.fileDescriptor
-        parcel.writeFileDescriptor(fd)
         parcel.writeInt(size)
+        val fd = pfd?.fileDescriptor
         parcel.writeByteArray(if (fd != null && size > 0) ByteArray(0) else data)
+        if (fd != null) {
+            parcel.writeFileDescriptor(fd)
+        }
     }
 
     fun readFromParcel(parcel: Parcel) {
         tag = parcel.readString() ?: ""
-        pfd = parcel.readFileDescriptor()
         size = parcel.readInt()
         data = parcel.createByteArray() ?: ByteArray(0)
+        pfd = parcel.readFileDescriptor()
     }
 
     override fun describeContents(): Int {

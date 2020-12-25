@@ -13,12 +13,15 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
 import android.widget.Toast
+import com.yhl.cast.server.data.Hello
 import com.yhl.lanlink.LanLinkSender
 import com.yhl.lanlink.ServiceInfo
 import com.yhl.lanlink.base.BaseActivity
 import com.yhl.lanlink.interfaces.ConnectionListener
 import com.yhl.lanlink.interfaces.DiscoveryListener
 import com.yhl.lanlink.interfaces.InitializeListener
+import com.yhl.lanlink.interfaces.MessageListener
+import com.yhl.lanlink.log.Logger
 import kotlinx.android.synthetic.main.activity_connection.*
 import kotlinx.android.synthetic.main.layout_lv_footer.*
 import kotlinx.android.synthetic.main.layout_lv_header.*
@@ -96,6 +99,17 @@ class ConnectionActivity : BaseActivity() {
                 isSearching = true
             }
         })
+    }
+
+    override fun onReceive(serviceInfo: ServiceInfo, type: String, data: Any, resultCode: Int) {
+        super.onReceive(serviceInfo, type, data, resultCode)
+        when (type) {
+            "hello-msg" -> {
+                if (data is Hello) {
+                    Logger.i(TAG, "message = $data");
+                }
+            }
+        }
     }
 
     private fun initView() {
