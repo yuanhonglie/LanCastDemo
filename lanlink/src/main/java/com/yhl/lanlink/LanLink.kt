@@ -16,7 +16,7 @@ import com.yhl.lanlink.util.isInServiceProcess
 import java.io.File
 import java.lang.ref.WeakReference
 
-class LanLink private constructor(private val context: Context): ILinkReceiver, ILinkSender {
+internal class LanLink private constructor(private val context: Context): ILinkReceiver, ILinkSender {
 
     private var service: ILanLinkService? = null
     private val uiHandler = Handler(Looper.getMainLooper())

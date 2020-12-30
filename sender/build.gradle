@@ -22,7 +22,7 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -100,4 +100,5 @@ dependencies {
     implementation libraries.andPermission
     implementation libraries.protobuf_lite
     implementation libraries.gson
+    implementation libraries.multidex
 }

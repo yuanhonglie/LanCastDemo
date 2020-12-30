@@ -1,6 +1,8 @@
 package com.yhl.cast.client
 
 import android.app.Application
+import android.content.Context
+import androidx.multidex.MultiDex
 import com.yhl.cast.client.data.HelloCodecGson
 import com.yhl.cast.client.data.UserCodecProto
 import com.yhl.lanlink.LanLinkReceiver
@@ -15,6 +17,11 @@ class ClientApplication: Application() {
             LanLinkReceiver.getInstance().registerMessageCodec(UserCodecProto())
             LanLinkSender.getInstance().registerMessageCodec(HelloCodecGson())
         }
+    }
+
+    override fun attachBaseContext(base: Context?) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
     }
 
 }

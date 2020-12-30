@@ -13,6 +13,10 @@ import com.yhl.lanlink.log.Logger
 import com.yhl.lanlink.server.ConnectionManager
 import com.yhl.lanlink.server.ServiceManager
 import com.yhl.lanlink.util.getIPv4Address
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -55,7 +59,7 @@ internal class Channel(
      * 连接server
      */
     fun connect() {
-        runOnWorkerThread {
+        GlobalScope.launch(Dispatchers.IO) {
             requestConnect()
         }
     }
@@ -64,7 +68,7 @@ internal class Channel(
      * 断开server
      */
     fun disconnect() {
-        runOnWorkerThread {
+        GlobalScope.launch(Dispatchers.IO) {
             requestDisconnect()
         }
     }
@@ -87,7 +91,7 @@ internal class Channel(
     }
 
     fun sendMessage(msg: Msg) {
-        runOnWorkerThread {
+        GlobalScope.launch(Dispatchers.IO) {
             requestSendMessage(msg)
         }
     }
@@ -193,50 +197,6 @@ internal class Channel(
     }
 
     @WorkerThread
-    private fun requestCastTask(uri: String, type: MediaType, action: ActionType) {
-        val media = Media(uri, type)
-        media.name = File(uri).name
-        val taskInfo = TaskInfo(media, action)
-
-        try {
-            val token = mToken
-            if (token != null) {
-                val call = mApi.requestTransfer(token, taskInfo)
-                val response = call.execute()
-                val result = response.body()
-                Logger.i(TAG, "requestCastTask: result = $result")
-                if (result != null && result.errorCode == RESULT_SUCCESS) {
-
-                }
-            } else {
-                Logger.e(TAG, "requestCastTask: invalid token")
-            }
-        } catch (e: Exception) {
-            Logger.e(TAG, "requestCastTask: error = ${e.message}")
-        }
-    }
-
-    @WorkerThread
-    private fun requestCastExit() {
-        try {
-            val token = mToken
-            if (token != null) {
-                val call = mApi.requestCastExit(token)
-                val response = call.execute()
-                val result = response.body()
-                Logger.i(TAG, "requestCastTask: result = $result")
-                if (result != null && result.errorCode == RESULT_SUCCESS) {
-
-                }
-            } else {
-                Logger.e(TAG, "requestCastTask: invalid token")
-            }
-        } catch (e: Exception) {
-            Logger.e(TAG, "requestCastTask: error = ${e.message}")
-        }
-    }
-
-    @WorkerThread
     private fun requestSendMessage(msg: Msg) {
         try {
             val token = mToken
@@ -255,10 +215,6 @@ internal class Channel(
         } catch (e: Exception) {
             Logger.e(TAG, "requestCastTask: error = ${e.message}")
         }
-    }
-
-    private fun runOnWorkerThread(r: () -> Unit) {
-        mWorkerHandler.post(r)
     }
 
     fun close() {

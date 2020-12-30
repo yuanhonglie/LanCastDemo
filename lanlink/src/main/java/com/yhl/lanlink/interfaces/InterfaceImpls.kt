@@ -4,7 +4,7 @@ import com.yhl.lanlink.*
 import com.yhl.lanlink.log.Logger
 
 private const val TAG = "interfaces"
-class IDiscoveryListenerImpl(private val lanLink: LanLink) : IDiscoveryListener.Stub() {
+internal class IDiscoveryListenerImpl(private val lanLink: LanLink) : IDiscoveryListener.Stub() {
     override fun onServiceFound(serviceInfo: ServiceInfo) {
         lanLink.runOnUiThread {
             lanLink.getDiscoveryListener()?.onServiceFound(serviceInfo)
@@ -30,7 +30,7 @@ class IDiscoveryListenerImpl(private val lanLink: LanLink) : IDiscoveryListener.
     }
 }
 
-class IRegistrationListenerImpl(private val lanLink: LanLink) :
+internal class IRegistrationListenerImpl(private val lanLink: LanLink) :
     IRegistrationListener.Stub() {
     override fun onServiceUnregistered(resultCode: Int) {
         lanLink.runOnUiThread {
@@ -45,7 +45,7 @@ class IRegistrationListenerImpl(private val lanLink: LanLink) :
     }
 }
 
-class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListener.Stub() {
+internal class IConnectionListenerImpl(private val lanLink: LanLink) : IConnectionListener.Stub() {
     override fun onConnect(serviceInfo: ServiceInfo, resultCode: Int) {
         lanLink.runOnUiThread {
             lanLink.getConnectionListener()?.onConnect(serviceInfo, resultCode)
